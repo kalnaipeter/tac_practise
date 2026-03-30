@@ -102,11 +102,24 @@ def make_issue_comment(issue_number: str, comment: str, repo_path: str) -> None:
     subprocess.run(cmd, capture_output=True, text=True, env=get_github_env())
 
 
-def run_claude(prompt: str, adw_id: str, logger: logging.Logger) -> str:
-    """Execute a prompt via Claude Code CLI and return output."""
-    cmd = [CLAUDE_PATH, "--print", "--model", "sonnet", "-p", prompt]
-    logger.debug(f"Running Claude: {prompt[:200]}...")
-    # Pass full environment so Claude picks up ANTHROPIC_API_KEY
+def run_claude(prompt: str, adw_id: str, logger: logging.Logger, text_only: bool = False) -> str:
+    """Execute a prompt via Claude Code CLI and return output.
+    
+    Args:
+        text_only: If True, use --print (no file/tool access). 
+                   If False, use agentic mode (can read/write files, run commands).
+    """
+    if text_only:
+        # Pipe prompt via stdin — avoids Windows command-line length limits
+        cmd = [CLAUDE_PATH, "--print", "--model", "sonnet"]
+    else:
+        # Agentic mode: Claude can read/write files, run commands
+        # Prompt piped via stdin with -p flag reading from pipe
+        cmd = [CLAUDE_PATH, "-p", "-", "--model", "sonnet",
+               "--output-format", "text", "--dangerously-skip-permissions"]
+    
+    logger.debug(f"Running Claude ({'text-only' if text_only else 'agentic'}): {prompt[:200]}...")
+    # Pass full environment so Claude picks up ANTHROPIC_API_KEY and PATH
     env = os.environ.copy()
     api_key = os.getenv("ANTHROPIC_API_KEY")
     if api_key:
@@ -129,7 +142,7 @@ def classify_issue(issue: dict, adw_id: str, logger: logging.Logger) -> str:
         f"Issue Title: {issue['title']}\n"
         f"Issue Body: {issue.get('body', '')}"
     )
-    result = run_claude(prompt, adw_id, logger)
+    result = run_claude(prompt, adw_id, logger, text_only=True)
     logger.info(f"Classification raw response: {result}")
     # Extract the command from the response (Claude may add extra text)
     for cmd in ("/chore", "/bug", "/feature"):
