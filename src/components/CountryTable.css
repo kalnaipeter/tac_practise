@@ -1,0 +1,40 @@
+.country-table-wrapper {
+  padding: 2rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.country-table-wrapper h1 {
+  margin-bottom: 1.5rem;
+  font-size: 1.8rem;
+}
+
+.country-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.country-table th,
+.country-table td {
+  padding: 0.6rem 0.8rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border, #e5e4e7);
+}
+
+.country-table th {
+  font-weight: 600;
+  color: var(--text-h, #08060d);
+  background: var(--code-bg, #f4f3ec);
+  position: sticky;
+  top: 0;
+}
+
+.country-table tbody tr:hover {
+  background: var(--accent-bg, rgba(170, 59, 255, 0.1));
+}
+
+.country-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
