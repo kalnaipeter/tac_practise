@@ -22,6 +22,7 @@ Environment Requirements:
 - GITHUB_PAT: (Optional) GitHub PAT if using different account than 'gh auth login'
 """
 
+import shutil
 import subprocess
 import sys
 import os
@@ -31,10 +32,12 @@ import uuid
 from typing import Tuple, Optional
 from dotenv import load_dotenv
 
-# Load environment variables
+# Load environment variables — check both adws/ and project root
 load_dotenv()
+load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"))
 
-CLAUDE_PATH = os.getenv("CLAUDE_CODE_PATH", "claude")
+_claude_env = os.getenv("CLAUDE_CODE_PATH", "claude")
+CLAUDE_PATH = shutil.which(_claude_env) or _claude_env
 
 
 def make_adw_id() -> str:
@@ -99,28 +102,53 @@ def make_issue_comment(issue_number: str, comment: str, repo_path: str) -> None:
     subprocess.run(cmd, capture_output=True, text=True, env=get_github_env())
 
 
-def run_claude(prompt: str, adw_id: str, logger: logging.Logger) -> str:
-    """Execute a prompt via Claude Code CLI and return output."""
-    cmd = [CLAUDE_PATH, "--print", "--model", "sonnet", prompt]
-    logger.debug(f"Running Claude: {prompt[:200]}...")
-    result = subprocess.run(cmd, capture_output=True, text=True)
+def run_claude(prompt: str, adw_id: str, logger: logging.Logger, text_only: bool = False) -> str:
+    """Execute a prompt via Claude Code CLI and return output.
+    
+    Args:
+        text_only: If True, use --print (no file/tool access). 
+                   If False, use agentic mode (can read/write files, run commands).
+    """
+    if text_only:
+        # Pipe prompt via stdin — avoids Windows command-line length limits
+        cmd = [CLAUDE_PATH, "--print", "--model", "sonnet"]
+    else:
+        # Agentic mode: Claude can read/write files, run commands
+        # Prompt piped via stdin with -p flag reading from pipe
+        cmd = [CLAUDE_PATH, "-p", "-", "--model", "sonnet",
+               "--output-format", "text", "--dangerously-skip-permissions"]
+    
+    logger.debug(f"Running Claude ({'text-only' if text_only else 'agentic'}): {prompt[:200]}...")
+    # Pass full environment so Claude picks up ANTHROPIC_API_KEY and PATH
+    env = os.environ.copy()
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if api_key:
+        env["ANTHROPIC_API_KEY"] = api_key
+    result = subprocess.run(cmd, capture_output=True, text=True, env=env, input=prompt)
     if result.returncode != 0:
-        logger.error(f"Claude error: {result.stderr}")
-        raise RuntimeError(f"Claude execution failed: {result.stderr}")
+        error_msg = result.stderr or result.stdout or "Unknown error"
+        logger.error(f"Claude error: {error_msg}")
+        raise RuntimeError(f"Claude execution failed: {error_msg}")
     return result.stdout.strip()
 
 
 def classify_issue(issue: dict, adw_id: str, logger: logging.Logger) -> str:
     """Classify a GitHub issue as /chore, /bug, or /feature."""
     prompt = (
-        f"Based on this GitHub issue, respond with ONLY one of: /chore /bug /feature\n\n"
-        f"Title: {issue['title']}\nBody: {issue.get('body', '')}"
+        "You are a GitHub issue classifier. "
+        "Based on the issue below, respond with ONLY one word — one of these three exactly:\n"
+        "/chore\n/bug\n/feature\n\n"
+        "No explanation, no other text. Just the command.\n\n"
+        f"Issue Title: {issue['title']}\n"
+        f"Issue Body: {issue.get('body', '')}"
     )
-    result = run_claude(prompt, adw_id, logger)
-    command = result.strip()
-    if command not in ("/chore", "/bug", "/feature"):
-        raise ValueError(f"Invalid classification: {result}")
-    return command
+    result = run_claude(prompt, adw_id, logger, text_only=True)
+    logger.info(f"Classification raw response: {result}")
+    # Extract the command from the response (Claude may add extra text)
+    for cmd in ("/chore", "/bug", "/feature"):
+        if cmd in result.lower():
+            return cmd
+    raise ValueError(f"Invalid classification: {result}")
 
 
 def generate_branch_name(issue: dict, issue_class: str, adw_id: str) -> str:
@@ -139,8 +167,12 @@ def generate_branch_name(issue: dict, issue_class: str, adw_id: str) -> str:
 
 
 def git_commit(message: str) -> None:
-    """Stage all changes and commit."""
+    """Stage all changes and commit. Skips if nothing to commit."""
     subprocess.run(["git", "add", "-A"], capture_output=True, text=True, check=True)
+    # Check if there's anything to commit
+    status = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True)
+    if not status.stdout.strip():
+        return  # Nothing to commit
     subprocess.run(["git", "commit", "-m", message], capture_output=True, text=True, check=True)
 
 
