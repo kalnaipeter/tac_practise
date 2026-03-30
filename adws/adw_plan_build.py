@@ -154,8 +154,12 @@ def generate_branch_name(issue: dict, issue_class: str, adw_id: str) -> str:
 
 
 def git_commit(message: str) -> None:
-    """Stage all changes and commit."""
+    """Stage all changes and commit. Skips if nothing to commit."""
     subprocess.run(["git", "add", "-A"], capture_output=True, text=True, check=True)
+    # Check if there's anything to commit
+    status = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True)
+    if not status.stdout.strip():
+        return  # Nothing to commit
     subprocess.run(["git", "commit", "-m", message], capture_output=True, text=True, check=True)
 
 
