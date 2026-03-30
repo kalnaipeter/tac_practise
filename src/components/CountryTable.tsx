@@ -2,10 +2,21 @@ import { useState } from "react";
 import type { Country } from "../types/Country";
 import { getCountries } from "../services/countryService";
 import Actions from "./Actions";
+import Paginator from "./Paginator";
 import "./CountryTable.css";
+
+const ROWS_OPTIONS = [5, 10, 25];
 
 export default function CountryTable() {
   const [countries] = useState<Country[]>(getCountries);
+  const [rowsPerPage, setRowsPerPage] = useState<number>(5);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+
+  const totalPages = Math.max(1, Math.ceil(countries.length / rowsPerPage));
+  const paginatedCountries = countries.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
+  );
 
   const formatNumber = (n: number) => n.toLocaleString();
 
@@ -30,7 +41,7 @@ export default function CountryTable() {
           </tr>
         </thead>
         <tbody>
-          {countries.map((country) => (
+          {paginatedCountries.map((country) => (
             <tr key={country.name}>
               <td>{country.name}</td>
               <td>{country.capital}</td>
@@ -51,6 +62,17 @@ export default function CountryTable() {
           ))}
         </tbody>
       </table>
+      <Paginator
+        currentPage={currentPage}
+        totalPages={totalPages}
+        rowsPerPage={rowsPerPage}
+        rowsPerPageOptions={ROWS_OPTIONS}
+        onPageChange={setCurrentPage}
+        onRowsPerPageChange={(rows) => {
+          setRowsPerPage(rows);
+          setCurrentPage(1);
+        }}
+      />
     </div>
   );
 }
