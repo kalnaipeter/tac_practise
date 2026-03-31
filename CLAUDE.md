@@ -53,13 +53,33 @@ The `adws/` directory contains an out-of-loop agentic system (PETER Framework) t
 - **Review:** Auto-created Pull Request
 
 Core pipeline: `adw_plan_build.py` → classify → branch → plan → implement → commit → PR
+Extended pipeline: `adw_plan_build_test.py` → classify → branch → plan → implement → **test (feedback loop)** → commit → PR
+Standalone test: `adw_test.py` → validate → resolve → revalidate (loop until green)
 
 ```bash
 cd adws/
-uv run adw_plan_build.py 123          # Process single issue
+uv run adw_plan_build.py 123          # Process single issue (no test phase)
+uv run adw_plan_build_test.py 123     # Process issue with validation feedback loop
+uv run adw_test.py 123                # Run validation only on current branch
+uv run adw_test.py 123 abc12345       # Run validation with existing ADW ID
 uv run trigger_webhook.py             # Real-time webhook server
 uv run trigger_cron.py                # Poll every 20s
 ```
+
+## Feedback Loop — Validation Protocol
+
+IMPORTANT: Every change must be validated. Follow the closed-loop cycle: **Request → Validate → Resolve**.
+
+After any code change, run these commands in order:
+
+1. `npm run lint` — If there are errors at all, resolve them
+2. `npm run build` — If there are errors at all, resolve them
+
+IMPORTANT: If you run into any errors at all, stop and resolve them immediately then rerun every validation step from step 1. Do not skip re-validation after a fix.
+
+For bug fixes, read `specs/bug.md` for the full validation protocol including root cause analysis format.
+For defining what tests to run, read `specs/test.md` for the exact test execution sequence.
+For resolving specific test failures, read `specs/resolve-failed-test.md` for the resolution protocol.
 
 ## Conventions
 

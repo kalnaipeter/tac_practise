@@ -53,6 +53,59 @@ Review:        Pull Request created automatically
   - `trigger_webhook.py` — FastAPI webhook receiver for GitHub issue events
   - `trigger_cron.py` — Polling-based trigger that monitors GitHub for new issues
 - Updated **`CLAUDE.md`** to reference the ADW layer and the PETER framework
+- Created **`.env`** in project root with `ANTHROPIC_API_KEY` and `CLAUDE_CODE_PATH`
+- Updated **`.gitignore`** to exclude `.env`, `adws/.env`, and `agents/`
+
+## Practical Setup — What We Got Working
+
+### Prerequisites Installed
+1. **GitHub CLI (gh)** — `winget install --id GitHub.cli` then `gh auth login`
+2. **Astral UV** — `irm https://astral.sh/uv/install.ps1 | iex` (needed `Set-ExecutionPolicy RemoteSigned -Scope CurrentUser` first)
+3. **Claude Code CLI** — `npm install -g @anthropic-ai/claude-code` then run `claude` and type `/login` to authenticate with Anthropic API key
+4. **ngrok** — `winget install ngrok.ngrok` then `ngrok config add-authtoken YOUR_TOKEN` (free account at ngrok.com)
+
+### GitHub Repo
+- Repo: https://github.com/kalnaipeter/tac_practise
+- Remote switched from SSH to HTTPS: `git remote set-url origin https://github.com/kalnaipeter/tac_practise.git`
+
+### Cron Trigger (Polling Mode) — Tested and Working
+1. Run `cd tac_practise/adws && uv run trigger_cron.py`
+2. Polls GitHub every 20 seconds for new issues or "adw" comments
+3. Pipeline: classify issue → create branch → plan (agentic mode) → commit → implement (agentic mode) → commit → create PR
+4. Successfully processed GitHub issues and created PRs automatically
+
+### Webhook Trigger (Real-time Mode) — Tested and Working
+Requires 3 terminals running simultaneously:
+
+**Terminal 1 — Webhook server:**
+- `cd tac_practise/adws && uv run trigger_webhook.py`
+- Starts FastAPI on http://localhost:8001
+
+**Terminal 2 — ngrok tunnel:**
+- `ngrok http 8001`
+- Creates public URL (changes each restart on free tier)
+
+**Terminal 3 — Free for other commands**
+
+**GitHub webhook config:**
+- Go to https://github.com/kalnaipeter/tac_practise/settings/hooks
+- Add webhook with Payload URL = ngrok URL + /gh-webhook
+- Content type = application/json
+- Events: Issues and Issue comments
+- Creating a new issue or commenting "adw" triggers the pipeline instantly
+
+### Bugs Fixed During Setup
+- **Claude CLI not found on Windows:** `subprocess` couldn't find `claude` without full path. Fixed with `shutil.which()` to resolve `claude` → `claude.CMD`
+- **Prompt too long for Windows command line:** Long prompts got truncated. Fixed by piping prompts via stdin instead of passing as CLI arguments
+- **Claude --print mode can't write files:** Plan and implement steps need agentic mode (`-p` with `--dangerously-skip-permissions`) not text-only mode (`--print`)
+- **git commit fails on empty changes:** Added `git status --porcelain` check before committing
+- **.env not found:** `python-dotenv` loads from cwd; added fallback to load from project root
+- **Classification too strict:** Claude sometimes returns extra text; changed to search for `/chore`, `/bug`, `/feature` anywhere in response
+
+### Key Environment Variables (.env in project root)
+- `ANTHROPIC_API_KEY` — from https://console.anthropic.com/settings/keys (NEVER commit this)
+- `CLAUDE_CODE_PATH` — usually just `claude`
+- `GITHUB_PAT` — optional, only if using a different GitHub account than `gh auth login`
 
 ## Relation to TAC Goal
 
