@@ -169,8 +169,8 @@ def run_validation(logger: logging.Logger) -> Tuple[bool, str]:
 def resolve_failures(summary: str, adw_id: str, logger: logging.Logger) -> None:
     """Ask agent to fix validation failures using the resolve protocol."""
     resolve_prompt = (
-        "Read the file specs/resolve-failed-test.md to understand the resolution protocol.\n"
-        "Read the file specs/bug.md to understand the full validation stack.\n\n"
+        "Read the file .github/prompts/resolve-failed-test.prompt.md to understand the resolution protocol.\n"
+        "Read the file .github/prompts/bug-validation.prompt.md to understand the full validation stack.\n\n"
         "The following validation commands have failures. "
         "IMPORTANT: Fix every error, then rerun ALL validation commands to confirm zero errors.\n\n"
         f"Validation Results:\n{summary}\n\n"

@@ -100,9 +100,9 @@ When reporting test results (e.g., to GitHub issue comments), use this JSON stru
 
 ## Usage
 
-Reference this spec in any prompt that needs validation:
+Reference this prompt in any prompt that needs validation:
 
 ```
-Read specs/test.md and execute every validation step.
+Read .github/prompts/test.prompt.md and execute every validation step.
 IMPORTANT: If you run into any errors at all, stop and resolve them immediately then rerun every validation step.
 ```

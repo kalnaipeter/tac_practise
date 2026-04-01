@@ -242,7 +242,7 @@ def test_and_resolve(adw_id: str, logger: logging.Logger) -> bool:
         # Ask Claude to resolve the failures
         logger.info("Validation failures detected — asking agent to resolve...")
         resolve_prompt = (
-            "Read the file specs/bug.md to understand the validation protocol.\n\n"
+            "Read the file .github/prompts/bug-validation.prompt.md to understand the validation protocol.\n\n"
             "The following validation commands have failures. "
             "IMPORTANT: Fix every error, then rerun ALL validation commands to confirm zero errors.\n\n"
             f"Validation Results:\n{summary}\n\n"

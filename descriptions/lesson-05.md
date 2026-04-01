@@ -44,9 +44,9 @@
 
 ## Applied Changes
 
-- Created **`specs/bug.md`** — Validation spec that defines all feedback loop steps for closing the loop when solving a bug. Includes bug plan format template and the feedback loop protocol.
-- Created **`specs/test.md`** — Application validation test suite defining the exact test execution sequence (lint → build → unit tests → E2E) with structured JSON output format. This is the core of what the agent runs to validate.
-- Created **`specs/resolve-failed-test.md`** — The "Resolve" step of the cycle. Tells the agent how to analyze, reproduce, fix, and re-validate a specific failing test.
+- Created **`.github/prompts/bug-validation.prompt.md`** — Validation spec that defines all feedback loop steps for closing the loop when solving a bug. Includes bug plan format template and the feedback loop protocol.
+- Created **`.github/prompts/test.prompt.md`** — Application validation test suite defining the exact test execution sequence (lint → build → unit tests → E2E) with structured JSON output format. This is the core of what the agent runs to validate.
+- Created **`.github/prompts/resolve-failed-test.prompt.md`** — The "Resolve" step of the cycle. Tells the agent how to analyze, reproduce, fix, and re-validate a specific failing test.
 - Created **`adws/adw_plan_build_test.py`** — Extended the ADW pipeline to include a test/validation phase after build. Runs validation commands and loops until all pass.
 - Created **`adws/adw_test.py`** — Standalone test ADW that runs the validation feedback loop independently. Can be chained after `adw_plan_build.py` or run on its own against any branch.
 - Updated **`CLAUDE.md`** to include feedback loop validation instructions — every agent session now has closed-loop validation as a core directive.

@@ -52,16 +52,43 @@ The `adws/` directory contains an out-of-loop agentic system (PETER Framework) t
 - **Environment:** Feature branch per issue
 - **Review:** Auto-created Pull Request
 
-Core pipeline: `adw_plan_build.py` → classify → branch → plan → implement → commit → PR
-Extended pipeline: `adw_plan_build_test.py` → classify → branch → plan → implement → **test (feedback loop)** → commit → PR
-Standalone test: `adw_test.py` → validate → resolve → revalidate (loop until green)
+### Pipelines
+
+| Pipeline | Phases | Use When |
+|----------|--------|----------|
+| `adw_plan_build.py` | Plan → Build → PR | Quick iteration, no validation |
+| `adw_plan_build_test.py` | Plan → Build → Test → PR | Standard development with feedback loop |
+| `adw_plan_build_review.py` | Plan → Build → Review | Build + spec verification (screenshots) |
+| `adw_plan_build_document.py` | Plan → Build → Document | Build + auto-documentation |
+| `adw_plan_build_test_review.py` | Plan → Build → Test → Review | Full validation + spec review |
+| `adw_sdlc.py` | Plan → Build → Test → Review → Document | Complete SDLC for production features |
+
+### Standalone Phases
+
+| Phase | Script | Purpose |
+|-------|--------|---------|
+| Test | `adw_test.py` | Validate → resolve → revalidate (loop until green) |
+| Review | `adw_review.py` | Review implementation against spec, capture screenshots |
+| Patch | `adw_patch.py` | Quick-fix specific issue from 'adw_patch' keyword |
+| Document | `adw_document.py` | Generate feature docs + update conditional_docs |
 
 ```bash
 cd adws/
-uv run adw_plan_build.py 123          # Process single issue (no test phase)
-uv run adw_plan_build_test.py 123     # Process issue with validation feedback loop
+# Pipelines
+uv run adw_plan_build.py 123          # Plan + Build only
+uv run adw_plan_build_test.py 123     # Plan + Build + Test feedback loop
+uv run adw_plan_build_review.py 123   # Plan + Build + Review against spec
+uv run adw_plan_build_test_review.py 123  # Plan + Build + Test + Review
+uv run adw_sdlc.py 123               # Full SDLC: Plan + Build + Test + Review + Document
+
+# Standalone phases (require prior ADW state)
 uv run adw_test.py 123                # Run validation only on current branch
 uv run adw_test.py 123 abc12345       # Run validation with existing ADW ID
+uv run adw_review.py 123 abc12345     # Review with existing ADW state
+uv run adw_patch.py 123               # Quick-fix from 'adw_patch' keyword
+uv run adw_document.py 123 abc12345   # Document with existing ADW state
+
+# Triggers
 uv run trigger_webhook.py             # Real-time webhook server
 uv run trigger_cron.py                # Poll every 20s
 ```
@@ -77,9 +104,13 @@ After any code change, run these commands in order:
 
 IMPORTANT: If you run into any errors at all, stop and resolve them immediately then rerun every validation step from step 1. Do not skip re-validation after a fix.
 
-For bug fixes, read `specs/bug.md` for the full validation protocol including root cause analysis format.
-For defining what tests to run, read `specs/test.md` for the exact test execution sequence.
-For resolving specific test failures, read `specs/resolve-failed-test.md` for the resolution protocol.
+For bug fixes, read `.github/prompts/bug-validation.prompt.md` for the full validation protocol including root cause analysis format.
+For defining what tests to run, read `.github/prompts/test.prompt.md` for the exact test execution sequence.
+For resolving specific test failures, read `.github/prompts/resolve-failed-test.prompt.md` for the resolution protocol.
+For reviewing implementation against a spec, read `.github/prompts/review.prompt.md` for the review protocol.
+For quick-fixing a specific issue, read `.github/prompts/patch.prompt.md` for the patch plan format.
+For generating feature documentation, read `.github/prompts/document.prompt.md` for the documentation format.
+For context routing, read `.github/prompts/conditional-docs.prompt.md` to know which docs to read for your current task.
 
 ## Conventions
 
