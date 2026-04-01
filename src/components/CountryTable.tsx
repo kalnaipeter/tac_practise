@@ -1,8 +1,9 @@
 import { useState } from "react";
 import type { Country } from "../types/Country";
-import { getCountries } from "../services/countryService";
+import { getCountries, getCountryByName } from "../services/countryService";
 import Actions from "./Actions";
 import Paginator from "./Paginator";
+import CountryDialog from "./CountryDialog";
 import "./CountryTable.css";
 
 const ROWS_OPTIONS = [5, 10, 25];
@@ -11,6 +12,7 @@ export default function CountryTable() {
   const [countries] = useState<Country[]>(getCountries);
   const [rowsPerPage, setRowsPerPage] = useState<number>(5);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
 
   const totalPages = Math.max(1, Math.ceil(countries.length / rowsPerPage));
   const paginatedCountries = countries.slice(
@@ -20,7 +22,8 @@ export default function CountryTable() {
 
   const formatNumber = (n: number) => n.toLocaleString();
 
-  const handleShow = (name: string) => alert(`Show: ${name}`);
+  const handleShow = (name: string) => setSelectedCountry(getCountryByName(name) ?? null);
+  const handleClose = () => setSelectedCountry(null);
   const handleEdit = (name: string) => alert(`Edit: ${name}`);
   const handleDelete = (name: string) => alert(`Delete: ${name}`);
 
@@ -73,6 +76,7 @@ export default function CountryTable() {
           setCurrentPage(1);
         }}
       />
+      <CountryDialog country={selectedCountry} onClose={handleClose} />
     </div>
   );
 }
