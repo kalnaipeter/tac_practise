@@ -97,9 +97,9 @@ IMPORTANT: Execute every command. If you run into any errors at all, stop and re
 
 ## Usage
 
-Reference this spec in any bug-fixing prompt:
+Reference this prompt in any bug-fixing prompt:
 
 ```
-Read specs/bug.md and follow its validation protocol.
+Read .github/prompts/bug-validation.prompt.md and follow its validation protocol.
 Fix: <description of the bug>
 ```

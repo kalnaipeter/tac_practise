@@ -100,24 +100,45 @@ Best for environments where webhooks can't be exposed publicly.
 
 ```
 adws/
-├── adw_plan_build.py      # Core orchestrator — chains the full pipeline
-├── trigger_webhook.py     # FastAPI webhook receiver for GitHub events
-├── trigger_cron.py        # Polling-based trigger for GitHub issues
-├── agent.py               # Claude Code CLI execution layer
-├── github.py              # GitHub operations (fetch issues, post comments, PRs)
-├── data_types.py          # Pydantic models for issues, requests, responses
-├── utils.py               # ADW ID generation, logging setup
-├── health_check.py        # System health validation
-└── README.md              # This file
+├── adw_plan_build.py            # Core pipeline: Plan → Build → PR
+├── adw_plan_build_test.py       # Plan → Build → Test (feedback loop) → PR
+├── adw_plan_build_review.py     # Plan → Build → Review (spec verification)
+├── adw_plan_build_document.py   # Plan → Build → Document
+├── adw_plan_build_test_review.py # Plan → Build → Test → Review
+├── adw_sdlc.py                  # Full SDLC: Plan → Build → Test → Review → Document
+├── adw_test.py                  # Standalone test phase (feedback loop)
+├── adw_review.py                # Standalone review phase (spec verification + screenshots)
+├── adw_patch.py                 # Standalone patch phase (quick-fix from 'adw_patch' keyword)
+├── adw_document.py              # Standalone document phase (docs + conditional_docs update)
+├── trigger_webhook.py           # FastAPI webhook receiver for GitHub events
+├── trigger_cron.py              # Polling-based trigger for GitHub issues
+└── README.md                    # This file
 ```
+
+## Choosing a Workflow
+
+| Scenario | Workflow | Command |
+|----------|----------|---------|
+| Quick iteration, trust the code | Plan + Build | `uv run adw_plan_build.py 123` |
+| Standard development | Plan + Build + Test | `uv run adw_plan_build_test.py 123` |
+| Build + verify matches spec | Plan + Build + Review | `uv run adw_plan_build_review.py 123` |
+| Build + auto-documentation | Plan + Build + Document | `uv run adw_plan_build_document.py 123` |
+| Full validation + spec review | Plan + Build + Test + Review | `uv run adw_plan_build_test_review.py 123` |
+| Production feature (everything) | Full SDLC | `uv run adw_sdlc.py 123` |
+| Quick-fix from review/comment | Patch | `uv run adw_patch.py 123` |
+| Document existing work | Document | `uv run adw_document.py 123 <adw-id>` |
 
 ## ADW Tracking
 
 Every workflow run gets a unique 8-character ADW ID (e.g., `e5f6g7h8`).
 
 - **Branch:** `feat-123-e5f6g7h8-add-search-filter`
-- **Logs:** `agents/e5f6g7h8/adw_plan_build/execution.log`
+- **State:** `agents/e5f6g7h8/adw_state.json` (tracks adw_id, issue_number, branch_name, plan_file, issue_class)
+- **Logs:** `agents/e5f6g7h8/execution.log` (or `review_execution.log`, `patch_execution.log`, etc.)
+- **Review screenshots:** `agents/e5f6g7h8/reviewer/review_img/`
 - **Issue comments:** Prefixed with `e5f6g7h8_agent_name: ✅ status`
+
+State is passed between phases via `adw_state.json`, making phases composable and resumable.
 
 ## Agent Templates Used
 
@@ -133,6 +154,20 @@ The ADW system invokes these slash command templates (from `.github/prompts/`):
 | `/generate_branch_name` | Create semantic branch name |
 | `/commit` | Stage and commit with formatted message |
 | `/pull_request` | Push branch and create PR via `gh` |
+| `/review` | Review implementation against spec, capture screenshots |
+| `/patch` | Create focused patch plan for specific issue |
+| `/document` | Generate feature documentation + update conditional docs |
+
+## One Agent, One Prompt, One Purpose
+
+Each ADW phase uses a **dedicated agent with a focused prompt**. This keeps context windows clean and makes individual prompts improvable:
+
+- **Planner** reads the issue + codebase structure → produces a plan
+- **Builder** reads the plan → implements it
+- **Tester** reads the validation spec → runs/resolves tests
+- **Reviewer** reads the spec + diff + UI → verifies implementation
+- **Patcher** reads the review issue → creates minimal fix
+- **Documenter** reads the spec + diff + screenshots → generates docs
 
 ## Example Flow
 

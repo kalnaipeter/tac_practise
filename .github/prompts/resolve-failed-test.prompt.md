@@ -32,7 +32,7 @@
 ### 5. Validate the Fix
 
 - Re-run the same `execution_command` to confirm the test now passes
-- Then rerun ALL validation commands from `specs/test.md` to check for regressions
+- Then rerun ALL validation commands from `.github/prompts/test.prompt.md` to check for regressions
 - IMPORTANT: If any validation step fails after your fix, resolve it immediately and rerun ALL steps
 
 ## Test Failure Input
