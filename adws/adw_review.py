@@ -44,6 +44,12 @@ load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file_
 _claude_env = os.getenv("CLAUDE_CODE_PATH", "claude")
 CLAUDE_PATH = shutil.which(_claude_env) or _claude_env
 
+# LLM backend: "claude" (default) or "gemini"
+LLM_BACKEND = os.getenv("LLM_BACKEND", "claude").lower()
+_gemini_env = os.getenv("GEMINI_CLI_PATH", "gemini")
+GEMINI_PATH = shutil.which(_gemini_env) or _gemini_env
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+
 # Maximum number of review-resolve-rereview cycles
 MAX_REVIEW_RETRIES = 3
 
@@ -100,24 +106,71 @@ def make_issue_comment(issue_number: str, comment: str, repo_path: str) -> None:
     subprocess.run(cmd, capture_output=True, text=True, env=get_github_env())
 
 
-def run_claude(prompt: str, adw_id: str, logger: logging.Logger, text_only: bool = False, model: str = "sonnet") -> str:
-    """Execute a prompt via Claude Code CLI and return output."""
-    if text_only:
-        cmd = [CLAUDE_PATH, "--print", "--model", model]
-    else:
-        cmd = [CLAUDE_PATH, "-p", "-", "--model", model,
-               "--output-format", "text", "--dangerously-skip-permissions"]
+def get_current_branch() -> str:
+    """Get the current git branch name."""
+    result = subprocess.run(["git", "branch", "--show-current"], capture_output=True, text=True)
+    return result.stdout.strip()
 
-    logger.debug(f"Running Claude ({'text-only' if text_only else 'agentic'}): {prompt[:200]}...")
+
+def build_screenshot_markdown(review_result: dict, repo_path: str, logger: logging.Logger) -> str:
+    """Commit review screenshots, push, and return markdown image links using raw GitHub URLs."""
+    screenshots = review_result.get("screenshots", [])
+    if not screenshots:
+        return ""
+
+    # Collect valid screenshot files
+    valid_files = []
+    for path in screenshots:
+        if os.path.isfile(path):
+            valid_files.append(path)
+        else:
+            logger.warning(f"Screenshot not found: {path}")
+
+    if not valid_files:
+        return ""
+
+    # Commit and push screenshots so they're accessible via raw URL
+    git_commit("reviewer: add review screenshots")
+    branch = get_current_branch()
+    subprocess.run(["git", "push", "-u", "origin", branch], capture_output=True, text=True)
+
+    # Build markdown image links using raw GitHub URLs
+    parts = ["\n\n### Review Screenshots\n"]
+    for path in valid_files:
+        filename = os.path.basename(path)
+        # Convert absolute path to repo-relative path
+        rel_path = os.path.relpath(path, PROJECT_ROOT).replace("\\", "/")
+        raw_url = f"https://raw.githubusercontent.com/{repo_path}/{branch}/{rel_path}"
+        parts.append(f"![{filename}]({raw_url})")
+
+    return "\n".join(parts)
+
+
+def run_claude(prompt: str, adw_id: str, logger: logging.Logger, text_only: bool = False, model: str = "sonnet") -> str:
+    """Execute a prompt via LLM CLI (Claude or Gemini) and return output."""
+    if LLM_BACKEND == "gemini":
+        if text_only:
+            cmd = [GEMINI_PATH, "-p", prompt, "-m", GEMINI_MODEL, "--approval-mode", "plan", "-o", "text"]
+        else:
+            cmd = [GEMINI_PATH, "-p", prompt, "-m", GEMINI_MODEL, "--approval-mode", "yolo", "-o", "text"]
+    else:
+        if text_only:
+            cmd = [CLAUDE_PATH, "--print", "--model", model]
+        else:
+            cmd = [CLAUDE_PATH, "-p", "-", "--model", model,
+                   "--output-format", "text", "--dangerously-skip-permissions"]
+
+    logger.debug(f"Running {LLM_BACKEND} ({'text-only' if text_only else 'agentic'}): {prompt[:200]}...")
     env = os.environ.copy()
     api_key = os.getenv("ANTHROPIC_API_KEY")
     if api_key:
         env["ANTHROPIC_API_KEY"] = api_key
-    result = subprocess.run(cmd, capture_output=True, text=True, env=env, input=prompt)
+    stdin_input = prompt if LLM_BACKEND == "claude" else None
+    result = subprocess.run(cmd, capture_output=True, text=True, env=env, input=stdin_input)
     if result.returncode != 0:
         error_msg = result.stderr or result.stdout or "Unknown error"
-        logger.error(f"Claude error: {error_msg}")
-        raise RuntimeError(f"Claude execution failed: {error_msg}")
+        logger.error(f"{LLM_BACKEND} error: {error_msg}")
+        raise RuntimeError(f"{LLM_BACKEND} execution failed: {error_msg}")
     return result.stdout.strip()
 
 
@@ -251,8 +304,8 @@ def main():
 
     logger = setup_logger(adw_id)
 
-    if not os.getenv("ANTHROPIC_API_KEY"):
-        logger.error("Missing ANTHROPIC_API_KEY")
+    if LLM_BACKEND == "claude" and not os.getenv("ANTHROPIC_API_KEY"):
+        logger.error("Missing ANTHROPIC_API_KEY (required when LLM_BACKEND=claude)")
         sys.exit(1)
 
     logger.info(f"ADW Review - ID: {adw_id}")
@@ -294,9 +347,10 @@ def main():
 
             if repo_path:
                 summary = review_result.get("review_summary", "Implementation matches spec")
+                screenshot_md = build_screenshot_markdown(review_result, repo_path, logger)
                 make_issue_comment(
                     issue_number,
-                    f"{adw_id}_reviewer: ✅ Review passed\n\n{summary}",
+                    f"{adw_id}_reviewer: ✅ Review passed\n\n{summary}{screenshot_md}",
                     repo_path,
                 )
             break
@@ -315,10 +369,11 @@ def main():
             if repo_path:
                 summary = review_result.get("review_summary", "Review complete")
                 non_blocker_count = len(review_result.get("review_issues", [])) - len(blocker_issues)
+                screenshot_md = build_screenshot_markdown(review_result, repo_path, logger)
                 make_issue_comment(
                     issue_number,
                     f"{adw_id}_reviewer: ✅ Review complete\n\n{summary}\n\n"
-                    f"Non-blocker issues found: {non_blocker_count}",
+                    f"Non-blocker issues found: {non_blocker_count}{screenshot_md}",
                     repo_path,
                 )
             break

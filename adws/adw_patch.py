@@ -42,6 +42,12 @@ load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file_
 _claude_env = os.getenv("CLAUDE_CODE_PATH", "claude")
 CLAUDE_PATH = shutil.which(_claude_env) or _claude_env
 
+# LLM backend: "claude" (default) or "gemini"
+LLM_BACKEND = os.getenv("LLM_BACKEND", "claude").lower()
+_gemini_env = os.getenv("GEMINI_CLI_PATH", "gemini")
+GEMINI_PATH = shutil.which(_gemini_env) or _gemini_env
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -108,23 +114,30 @@ def make_issue_comment(issue_number: str, comment: str, repo_path: str) -> None:
 
 
 def run_claude(prompt: str, adw_id: str, logger: logging.Logger, text_only: bool = False, model: str = "sonnet") -> str:
-    """Execute a prompt via Claude Code CLI and return output."""
-    if text_only:
-        cmd = [CLAUDE_PATH, "--print", "--model", model]
+    """Execute a prompt via LLM CLI (Claude or Gemini) and return output."""
+    if LLM_BACKEND == "gemini":
+        if text_only:
+            cmd = [GEMINI_PATH, "-p", prompt, "-m", GEMINI_MODEL, "--approval-mode", "plan", "-o", "text"]
+        else:
+            cmd = [GEMINI_PATH, "-p", prompt, "-m", GEMINI_MODEL, "--approval-mode", "yolo", "-o", "text"]
     else:
-        cmd = [CLAUDE_PATH, "-p", "-", "--model", model,
-               "--output-format", "text", "--dangerously-skip-permissions"]
+        if text_only:
+            cmd = [CLAUDE_PATH, "--print", "--model", model]
+        else:
+            cmd = [CLAUDE_PATH, "-p", "-", "--model", model,
+                   "--output-format", "text", "--dangerously-skip-permissions"]
 
-    logger.debug(f"Running Claude ({'text-only' if text_only else 'agentic'}): {prompt[:200]}...")
+    logger.debug(f"Running {LLM_BACKEND} ({'text-only' if text_only else 'agentic'}): {prompt[:200]}...")
     env = os.environ.copy()
     api_key = os.getenv("ANTHROPIC_API_KEY")
     if api_key:
         env["ANTHROPIC_API_KEY"] = api_key
-    result = subprocess.run(cmd, capture_output=True, text=True, env=env, input=prompt)
+    stdin_input = prompt if LLM_BACKEND == "claude" else None
+    result = subprocess.run(cmd, capture_output=True, text=True, env=env, input=stdin_input)
     if result.returncode != 0:
         error_msg = result.stderr or result.stdout or "Unknown error"
-        logger.error(f"Claude error: {error_msg}")
-        raise RuntimeError(f"Claude execution failed: {error_msg}")
+        logger.error(f"{LLM_BACKEND} error: {error_msg}")
+        raise RuntimeError(f"{LLM_BACKEND} execution failed: {error_msg}")
     return result.stdout.strip()
 
 
@@ -194,8 +207,8 @@ def main():
     adw_id = sys.argv[2] if len(sys.argv) > 2 else make_adw_id()
     logger = setup_logger(adw_id)
 
-    if not os.getenv("ANTHROPIC_API_KEY"):
-        logger.error("Missing ANTHROPIC_API_KEY")
+    if LLM_BACKEND == "claude" and not os.getenv("ANTHROPIC_API_KEY"):
+        logger.error("Missing ANTHROPIC_API_KEY (required when LLM_BACKEND=claude)")
         sys.exit(1)
 
     logger.info(f"ADW Patch - ID: {adw_id}")

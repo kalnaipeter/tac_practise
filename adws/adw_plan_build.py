@@ -39,6 +39,14 @@ load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file_
 _claude_env = os.getenv("CLAUDE_CODE_PATH", "claude")
 CLAUDE_PATH = shutil.which(_claude_env) or _claude_env
 
+# LLM backend: "claude" (default) or "gemini"
+LLM_BACKEND = os.getenv("LLM_BACKEND", "claude").lower()
+_gemini_env = os.getenv("GEMINI_CLI_PATH", "gemini")
+GEMINI_PATH = shutil.which(_gemini_env) or _gemini_env
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 def make_adw_id() -> str:
     """Generate a short 8-character UUID for ADW tracking."""
@@ -103,32 +111,36 @@ def make_issue_comment(issue_number: str, comment: str, repo_path: str) -> None:
 
 
 def run_claude(prompt: str, adw_id: str, logger: logging.Logger, text_only: bool = False) -> str:
-    """Execute a prompt via Claude Code CLI and return output.
+    """Execute a prompt via LLM CLI (Claude or Gemini) and return output.
     
     Args:
-        text_only: If True, use --print (no file/tool access). 
+        text_only: If True, use read-only mode (no file/tool access). 
                    If False, use agentic mode (can read/write files, run commands).
     """
-    if text_only:
-        # Pipe prompt via stdin — avoids Windows command-line length limits
-        cmd = [CLAUDE_PATH, "--print", "--model", "sonnet"]
+    if LLM_BACKEND == "gemini":
+        if text_only:
+            cmd = [GEMINI_PATH, "-p", prompt, "-m", GEMINI_MODEL, "--approval-mode", "plan", "-o", "text"]
+        else:
+            cmd = [GEMINI_PATH, "-p", prompt, "-m", GEMINI_MODEL, "--approval-mode", "yolo", "-o", "text"]
     else:
-        # Agentic mode: Claude can read/write files, run commands
-        # Prompt piped via stdin with -p flag reading from pipe
-        cmd = [CLAUDE_PATH, "-p", "-", "--model", "sonnet",
-               "--output-format", "text", "--dangerously-skip-permissions"]
+        if text_only:
+            cmd = [CLAUDE_PATH, "--print", "--model", "sonnet"]
+        else:
+            cmd = [CLAUDE_PATH, "-p", "-", "--model", "sonnet",
+                   "--output-format", "text", "--dangerously-skip-permissions"]
     
-    logger.debug(f"Running Claude ({'text-only' if text_only else 'agentic'}): {prompt[:200]}...")
-    # Pass full environment so Claude picks up ANTHROPIC_API_KEY and PATH
+    logger.debug(f"Running {LLM_BACKEND} ({'text-only' if text_only else 'agentic'}): {prompt[:200]}...")
     env = os.environ.copy()
     api_key = os.getenv("ANTHROPIC_API_KEY")
     if api_key:
         env["ANTHROPIC_API_KEY"] = api_key
-    result = subprocess.run(cmd, capture_output=True, text=True, env=env, input=prompt)
+    # For Gemini, prompt is passed as -p flag; for Claude, pipe via stdin
+    stdin_input = prompt if LLM_BACKEND == "claude" else None
+    result = subprocess.run(cmd, capture_output=True, text=True, env=env, input=stdin_input)
     if result.returncode != 0:
         error_msg = result.stderr or result.stdout or "Unknown error"
-        logger.error(f"Claude error: {error_msg}")
-        raise RuntimeError(f"Claude execution failed: {error_msg}")
+        logger.error(f"{LLM_BACKEND} error: {error_msg}")
+        raise RuntimeError(f"{LLM_BACKEND} execution failed: {error_msg}")
     return result.stdout.strip()
 
 
@@ -164,6 +176,15 @@ def generate_branch_name(issue: dict, issue_class: str, adw_id: str) -> str:
     subprocess.run(["git", "pull"], capture_output=True, text=True)
     subprocess.run(["git", "checkout", "-b", branch_name], capture_output=True, text=True, check=True)
     return branch_name
+
+
+def save_state(state: dict, adw_id: str) -> None:
+    """Save ADW state to agents/{adw_id}/adw_state.json."""
+    state_dir = os.path.join(PROJECT_ROOT, "agents", adw_id)
+    os.makedirs(state_dir, exist_ok=True)
+    state_path = os.path.join(state_dir, "adw_state.json")
+    with open(state_path, "w") as f:
+        json.dump(state, f, indent=2)
 
 
 def git_commit(message: str) -> None:
@@ -205,8 +226,8 @@ def main():
     repo_path = get_repo_path()
 
     # Check prerequisites
-    if not os.getenv("ANTHROPIC_API_KEY"):
-        logger.error("Missing ANTHROPIC_API_KEY")
+    if LLM_BACKEND == "claude" and not os.getenv("ANTHROPIC_API_KEY"):
+        logger.error("Missing ANTHROPIC_API_KEY (required when LLM_BACKEND=claude)")
         sys.exit(1)
 
     logger.info(f"ADW ID: {adw_id}")
@@ -226,6 +247,15 @@ def main():
     logger.info(f"Working on branch: {branch_name}")
     make_issue_comment(issue_number, f"{adw_id}_ops: ✅ Working on branch: {branch_name}", repo_path)
 
+    # Save initial state so downstream phases can access it
+    state = {
+        "adw_id": adw_id,
+        "issue_number": int(issue_number),
+        "issue_class": issue_command,
+        "branch_name": branch_name,
+    }
+    save_state(state, adw_id)
+
     # 4. Plan — use the appropriate template
     logger.info("Building implementation plan...")
     make_issue_comment(issue_number, f"{adw_id}_planner: ✅ Building implementation plan", repo_path)
@@ -236,6 +266,15 @@ def main():
     # 5. Commit plan
     git_commit(f"planner: {issue_command.replace('/', '')}: add implementation plan for #{issue['number']}")
     logger.info("Plan committed")
+
+    # Find the plan file that was just created and save to state
+    diff_result = subprocess.run(["git", "diff", "HEAD~1", "--name-only"], capture_output=True, text=True)
+    for line in diff_result.stdout.strip().split("\n"):
+        if line.startswith("specs/") and line.endswith(".md"):
+            state["plan_file"] = line
+            save_state(state, adw_id)
+            logger.info(f"Plan file saved to state: {line}")
+            break
 
     # 6. Implement
     logger.info("Implementing solution...")
