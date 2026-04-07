@@ -1,6 +1,6 @@
 # Copilot-Only Workflow Guide
 
-> Version: 1.1  
+> Version: 2.0  
 > Last updated: 2026-04-07  
 > How to use all TAC lesson infrastructure with only VS Code Copilot — no external LLM backends needed.
 
@@ -42,15 +42,15 @@ All prompts live in `.github/prompts/`. Each has a single purpose.
 
 | Prompt | Command | Purpose |
 |---|---|---|
-| **test** | `/test` | Run lint + build validation checks |
-| **resolve-failed-test** | `/resolve-failed-test` | Fix failing lint/build errors |
-| **review** | `/review` | Review current changes for quality |
+| **test** | `/test` | Full validation: lint + build + unit tests + E2E |
+| **resolve-failed-test** | `/resolve-failed-test` | Fix failing validation errors (structured protocol) |
+| **review** | `/review` | Review against spec with screenshots + JSON report |
 
 ### Documentation & Context
 
 | Prompt | Command | Purpose |
 |---|---|---|
-| **document** | `/document` | Generate/update feature docs |
+| **document** | `/document` | Generate feature docs in `app_docs/` with screenshots |
 | **conditional-docs** | `/conditional-docs` | Update docs only if code changed |
 | **prime** | `/prime` | Load full project context into Copilot |
 
@@ -59,6 +59,12 @@ All prompts live in `.github/prompts/`. Each has a single purpose.
 | Prompt | Command | Purpose |
 |---|---|---|
 | **chore** | `/chore <description>` | Refactoring, cleanup, config changes |
+
+### Full Pipeline
+
+| Prompt | Command | Purpose |
+|---|---|---|
+| **flow** | `/flow <description>` | Complete SDLC: classify → branch → plan → build → test → review → document → push |
 
 ## Standard Workflows
 
@@ -123,36 +129,88 @@ Step 6:  /document                  → Document
 Step 7:  git commit + PR            → Ship
 ```
 
-## Sequential Flow Prompt
+## Sequential Flow Prompt — `/flow`
 
 For running a complete pipeline in one go, use the **flow prompt**:
 
 ```
-/flow feature Add dark mode toggle
-/flow bug The table doesn't sort correctly  
-/flow chore Migrate to CSS modules
+/flow Add dark mode toggle
+/flow The table doesn't sort correctly  
+/flow Migrate to CSS modules
 ```
 
-This runs the full sequence (plan → build → test → fix → review → document) automatically. See `.github/prompts/flow.prompt.md`.
+This runs the **full SDLC sequence** in a single Copilot session — equivalent to running all ADW scripts combined.
 
-The `/flow` prompt includes:
-- **Spec verification** — compares implementation against every acceptance criterion
-- **Visual review with screenshots** — takes 1-5 screenshots of critical UI paths, stores in `agents/flow/review_img/`
-- **Issue severity classification** — blocker / tech_debt / skippable
-- **Documentation generation** — creates feature docs in `app_docs/` with screenshots
-- **Structured report** — files changed, validation results, review verdict, screenshots taken
+### What `/flow` Does (9 phases)
 
-## Comparison: ADW Automation vs Copilot Manual
-
-| Aspect | ADW (automated) | Copilot (manual) |
+| Phase | ADW Equivalent | What Happens |
 |---|---|---|
-| **Trigger** | GitHub webhook / cron | You type the prompt |
+| 1. Classify | `classify_issue()` | Determines feature / bug / chore |
+| 2. Branch | `generate_branch_name()` | `git checkout -b <type>/<slug>` from main |
+| 3. Plan | Plan Agent + `feature.prompt.md` | Creates spec in `specs/` with acceptance criteria + validation commands, commits |
+| 4. Build | Build Agent + `implement.prompt.md` | Implements the spec, commits |
+| 5. Validate | `adw_test.py` test-fix loop | Runs lint → build → unit tests → E2E. Max 4 attempts, commits each fix |
+| 6. Review | `adw_review.py` + `review.prompt.md` | Spec verification, screenshots (1-5), severity classification, patch specs for blockers |
+| 7. Document | `adw_document.py` + `document.prompt.md` | Creates docs in `app_docs/`, copies screenshots, updates conditional-docs |
+| 8. Push | `create_pull_request()` | `git push origin HEAD` |
+| 9. Report | Status comment | Structured summary: files, validation, review, screenshots, docs |
+
+### ADW Coverage Comparison
+
+| ADW Capability | Covered by `/flow`? |
+|---|---|
+| Issue classification | Yes — Phase 1 |
+| Git branch creation | Yes — Phase 2 |
+| Spec creation from template | Yes — Phase 3, with validation commands section |
+| Implementation from spec | Yes — Phase 4 |
+| Lint + build validation | Yes — Phase 5 |
+| Unit tests + E2E tests | Yes — Phase 5 (skip if not configured) |
+| Test-fix-retest loop (max 4) | Yes — Phase 5, commits each fix attempt |
+| Resolve-failed-test protocol | Yes — Phase 5 references the prompt |
+| Review against spec | Yes — Phase 6a, every acceptance criterion |
+| Screenshots with read-back | Yes — Phase 6b, 1-5 screenshots in `agents/flow/review_img/` |
+| Issue severity (blocker/tech_debt/skip) | Yes — Phase 6b |
+| Patch specs for blockers | Yes — Phase 6b, creates `specs/patch/` |
+| Documentation generation | Yes — Phase 7 |
+| Screenshots in docs | Yes — Phase 7 copies to `app_docs/assets/` |
+| Conditional-docs update | Yes — Phase 7 |
+| Git commits per phase | Yes — plan, build, fixes, docs each committed |
+| Git push | Yes — Phase 8 |
+| Structured report | Yes — Phase 9 |
+
+### What `/flow` Does NOT Cover (by design)
+
+These are ADW-only capabilities that require external infrastructure:
+
+| ADW Capability | Why Not in `/flow` |
+|---|---|
+| GitHub issue fetching (`gh issue view`) | You describe the task directly — no issue needed |
+| GitHub issue comments (status updates) | No issue to comment on — progress is visible in chat |
+| ADW ID tracking | Copilot session is the tracking unit |
+| State persistence (`adw_state.json`) | Single session — no need to save/resume |
+| Execution logging to file | Chat transcript serves as the log |
+| Webhook / cron triggers | You trigger manually with `/flow` |
+| Multi-agent subprocess isolation | Single agent — shared context (usually better for coherence) |
+| Model selection per phase (opus for review) | Copilot chooses the model |
+| Rate limit retry logic | Handled by Copilot runtime |
+
+## Comparison: ADW Automation vs `/flow` (Copilot)
+
+| Aspect | ADW (automated) | `/flow` (Copilot) |
+|---|---|---|
+| **Trigger** | GitHub webhook / cron | You type `/flow <task>` |
 | **LLM backend** | Claude CLI / Gemini API | VS Code Copilot (included) |
 | **Cost** | API credits needed | Free with Copilot subscription |
 | **Speed** | Hands-free, ~5 min | Interactive, ~10-15 min |
-| **Control** | Review PR after | Review each step |
-| **Quality** | Same prompts | Same prompts |
-| **Spec review** | Auto-generated, reviewed post | You review the spec before building |
+| **Control** | Review PR after | Watch each phase, intervene anytime |
+| **Prompts used** | Same `.github/prompts/` | Same `.github/prompts/` |
+| **Git automation** | Full (branch, commit, push, PR) | Full (branch, commit, push — you create PR) |
+| **Test loop** | Max 4 retries, commit per fix | Max 4 retries, commit per fix |
+| **Review** | Screenshots + JSON report | Screenshots + markdown report |
+| **Documentation** | Auto-generated with screenshots | Auto-generated with screenshots |
+| **Context isolation** | Fresh per phase (focused) | Shared session (more coherent) |
+| **Resumable** | Yes (state file) | No (single session) |
+| **GitHub integration** | Issue fetch + status comments | None (manual task description) |
 
 ## Context Files
 
@@ -174,4 +232,4 @@ These files help Copilot understand the project:
 
 ## Maintaining This Document
 
-IMPORTANT: When adding new prompts, changing workflows, or applying new TAC lessons, update this guide to reflect the current state. The version number and date at the top should be incremented.
+CRITICAL: When adding new prompts, changing workflows, or applying new TAC lessons, update this guide to reflect the current state. The version number and date at the top should be incremented.

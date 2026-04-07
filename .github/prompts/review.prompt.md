@@ -41,7 +41,7 @@ review_image_dir: `<absolute path to project>/agents/<adw_id>/<agent_name>/revie
   - IMPORTANT: Output your result in JSON format based on the `Report` section below.
   - IMPORTANT: Do not include any additional text, explanations, or markdown formatting
   - We'll immediately run JSON.parse() on the output, so make sure it's valid JSON
-- Ultra think as you work through the review process. Focus on the critical functionality paths and the user experience. Don't report issues if they are not critical to the feature.
+- THINK HARD as you work through the review process. Be precise — focus only on the critical functionality paths and the user experience. Don't report issues if they are not critical to the feature.
 
 ## Setup
 

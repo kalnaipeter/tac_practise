@@ -20,7 +20,7 @@ issue_screenshots: $5 (optional) — comma-separated list of screenshot paths if
   - Replace `{descriptive-name}` with a short name based on the issue (e.g., "fix-button-color", "update-validation", "correct-layout")
 - IMPORTANT: This is a PATCH — keep the scope minimal. Only fix what's described in the `review_change_request` and nothing more.
 - Run `git diff --stat`. If changes are available, use them to understand what's been done in the codebase.
-- Ultra think about the most efficient way to implement the solution with minimal code changes
+- THINK HARD about the most efficient way to implement the solution with minimal code changes. Be surgical — change only what's necessary.
 - Base your `Plan Format: Validation` on the validation steps from `spec_path` if provided
   - If any tests fail in the validation steps, you must fix them.
   - If not provided, READ `.github/prompts/test.prompt.md: ## Test Execution Sequence` and execute the tests to understand the tests that need to be run to validate the patch.

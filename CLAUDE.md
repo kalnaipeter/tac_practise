@@ -95,7 +95,7 @@ uv run trigger_cron.py                # Poll every 20s
 
 ## Feedback Loop — Validation Protocol
 
-IMPORTANT: Every change must be validated. Follow the closed-loop cycle: **Request → Validate → Resolve**.
+CRITICAL: Every change must be validated. Follow the closed-loop cycle: **Request → Validate → Resolve**.
 
 After any code change, run these commands in order:
 

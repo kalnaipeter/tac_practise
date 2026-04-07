@@ -10,6 +10,7 @@ Create a new plan in specs/*.md to resolve the `Chore` using the exact specified
 - Research the codebase and put together a plan to accomplish the chore.
 - IMPORTANT: Replace every <placeholder> in the `Plan Format` with the requested value. Add as much detail as needed to accomplish the chore.
 - Use your reasoning model: THINK HARD about the plan and the steps to accomplish the chore.
+- Be precise — avoid unnecessary changes beyond the chore scope.
 - Respect requested files in the `Relevant Files` section.
 - Start your research by reading the `CLAUDE.md` file.
 

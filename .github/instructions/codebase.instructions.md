@@ -24,6 +24,8 @@ Read `CLAUDE.md` in the project root for full context on the tech stack, archite
 4. Run `npm run build` to verify no TypeScript errors after changes
 5. Run `npm run lint` to verify no lint errors after changes
 
+Do not skip these validation steps.
+
 ## Maintenance
 
 When adding new prompts in `.github/prompts/` or changing workflows, update `ai_docs/copilot-workflow.md` to keep the Copilot workflow guide current.

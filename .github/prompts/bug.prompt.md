@@ -10,6 +10,7 @@ Create a new plan in specs/*.md to resolve the `Bug` using the exact specified m
 - Research the codebase to understand the bug, reproduce it, and put together a plan to fix it.
 - IMPORTANT: Replace every <placeholder> in the `Plan Format` with the requested value. Add as much detail as needed to fix the bug.
 - Use your reasoning model: THINK HARD about the bug, its root cause, and the steps to fix it properly.
+- Avoid assumptions about the cause — trace the evidence before deciding on a fix.
 - IMPORTANT: Be surgical with your bug fix, solve the bug at hand and don't fall off track.
 - IMPORTANT: We want the minimal number of changes that will fix and address the bug.
 - If you need a new library, add it via `npm install` and be sure to report it in the `Notes` section of the `Plan Format`.

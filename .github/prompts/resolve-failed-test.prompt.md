@@ -24,7 +24,7 @@
 
 ### 4. Fix the Issue
 
-- THINK HARD about the root cause before jumping to a fix
+- THINK HARD about the root cause before jumping to a fix — avoid assumptions
 - Make minimal, targeted changes to resolve only this test failure
 - Do not modify unrelated code or tests
 - Be surgical — fix the failure at hand, don't refactor

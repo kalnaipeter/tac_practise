@@ -6,6 +6,7 @@ Follow the `Instructions` to implement the `Plan` then `Report` the completed wo
 - IMPORTANT: Execute every step in order, top to bottom.
 - Follow existing codebase patterns and conventions.
 - Do not skip validation commands — run them all before reporting.
+- Double-check your implementation matches every requirement in the plan.
 
 ## Plan
 $ARGUMENTS

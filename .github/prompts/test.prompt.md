@@ -12,7 +12,7 @@ Proactively identify and fix issues before they ship. Run this suite to:
 
 ## Instructions
 
-- Execute each test in the sequence below, top to bottom
+- Follow these steps exactly. Execute each test in the sequence below, top to bottom.
 - `cd` into the project root before each command
 - If a test fails, **stop immediately** — do not run subsequent tests
 - IMPORTANT: If any test fails, fix the issue and rerun ALL tests from step 1

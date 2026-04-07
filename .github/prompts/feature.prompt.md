@@ -73,7 +73,7 @@ IMPORTANT: Execute every step in order, top to bottom.
 <describe integration tests needed for the feature>
 
 ### Edge Cases
-<list edge cases that need to be tested>
+THINK HARD: What could go wrong? <list edge cases that need to be tested>
 
 ## Acceptance Criteria
 <list specific, measurable criteria that must be met for the feature to be considered complete>
