@@ -24,6 +24,7 @@ Triggers on:
 import os
 import subprocess
 import uuid
+import time
 from fastapi import FastAPI, Request
 from dotenv import load_dotenv
 import uvicorn
@@ -32,6 +33,11 @@ load_dotenv()
 
 PORT = int(os.getenv("PORT", "8001"))
 app = FastAPI(title="ADW Webhook Trigger", description="GitHub webhook endpoint for tac_practise ADW")
+
+# Deduplication: track recently triggered issues to prevent duplicate processing
+# Key: issue_number, Value: timestamp of last trigger
+_recently_triggered: dict[int, float] = {}
+DEDUP_WINDOW_SECONDS = 120  # Ignore duplicate events within 2 minutes
 
 
 @app.post("/gh-webhook")
@@ -56,6 +62,16 @@ async def github_webhook(request: Request):
             trigger_reason = "Comment with 'adw' command"
 
     if should_trigger:
+        # Deduplication check
+        now = time.time()
+        last_trigger = _recently_triggered.get(issue_number, 0)
+        if now - last_trigger < DEDUP_WINDOW_SECONDS:
+            return {
+                "status": "ignored",
+                "issue": issue_number,
+                "reason": f"Issue #{issue_number} was already triggered {int(now - last_trigger)}s ago (dedup window: {DEDUP_WINDOW_SECONDS}s)",
+            }
+        _recently_triggered[issue_number] = now
         adw_id = str(uuid.uuid4())[:8]
         script_dir = os.path.dirname(os.path.abspath(__file__))
         project_root = os.path.dirname(script_dir)

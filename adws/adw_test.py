@@ -33,6 +33,10 @@ import logging
 import json
 import uuid
 from typing import Tuple, Optional
+import re
+import time
+import urllib.request
+import urllib.error
 from dotenv import load_dotenv
 
 # Load environment variables — check both adws/ and project root
@@ -104,13 +108,47 @@ def make_issue_comment(issue_number: str, comment: str, repo_path: str) -> None:
     subprocess.run(cmd, capture_output=True, text=True, env=get_github_env())
 
 
+def _parse_retry_delay(error_text: str) -> int:
+    """Extract retry delay from Gemini rate-limit error, or return default 65s."""
+    match = re.search(r'retry in (\d+)', error_text)
+    return int(match.group(1)) + 5 if match else 65
+
+
+def _gemini_api_call(prompt: str, logger: logging.Logger) -> str:
+    """Call Gemini REST API directly (1 request per call, no CLI overhead)."""
+    api_key = os.getenv("GEMINI_API_KEY", "").strip('"')
+    if not api_key:
+        raise RuntimeError("GEMINI_API_KEY not set")
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={api_key}"
+    body = json.dumps({"contents": [{"parts": [{"text": prompt}]}]}).encode()
+    max_retries = 3
+    for attempt in range(1, max_retries + 1):
+        req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
+        try:
+            resp = urllib.request.urlopen(req, timeout=120)
+            data = json.loads(resp.read())
+            return data["candidates"][0]["content"]["parts"][0]["text"].strip()
+        except urllib.error.HTTPError as e:
+            err_body = e.read().decode()
+            if e.code == 429 and attempt < max_retries:
+                delay = _parse_retry_delay(err_body)
+                logger.warning(f"Gemini API rate limit (attempt {attempt}/{max_retries}). Waiting {delay}s...")
+                time.sleep(delay)
+                continue
+            err_msg = json.loads(err_body).get("error", {}).get("message", err_body[:200])
+            raise RuntimeError(f"Gemini API error {e.code}: {err_msg}")
+    raise RuntimeError(f"Gemini API failed after {max_retries} retries")
+
+
 def run_claude(prompt: str, adw_id: str, logger: logging.Logger, text_only: bool = False) -> str:
     """Execute a prompt via LLM CLI (Claude or Gemini) and return output."""
+    # For Gemini text-only: use direct API (1 req vs ~5+ via CLI)
+    if LLM_BACKEND == "gemini" and text_only:
+        logger.debug(f"Running Gemini API direct (text-only): {prompt[:200]}...")
+        return _gemini_api_call(prompt, logger)
+
     if LLM_BACKEND == "gemini":
-        if text_only:
-            cmd = [GEMINI_PATH, "-p", prompt, "-m", GEMINI_MODEL, "--approval-mode", "plan", "-o", "text"]
-        else:
-            cmd = [GEMINI_PATH, "-p", prompt, "-m", GEMINI_MODEL, "--approval-mode", "yolo", "-o", "text"]
+        cmd = [GEMINI_PATH, "-p", " ", "-m", GEMINI_MODEL, "--approval-mode", "yolo", "-o", "text"]
     else:
         if text_only:
             cmd = [CLAUDE_PATH, "--print", "--model", "sonnet"]
@@ -118,18 +156,32 @@ def run_claude(prompt: str, adw_id: str, logger: logging.Logger, text_only: bool
             cmd = [CLAUDE_PATH, "-p", "-", "--model", "sonnet",
                    "--output-format", "text", "--dangerously-skip-permissions"]
 
-    logger.debug(f"Running {LLM_BACKEND} ({'text-only' if text_only else 'agentic'}): {prompt[:200]}...")
-    env = os.environ.copy()
-    api_key = os.getenv("ANTHROPIC_API_KEY")
-    if api_key:
-        env["ANTHROPIC_API_KEY"] = api_key
-    stdin_input = prompt if LLM_BACKEND == "claude" else None
-    result = subprocess.run(cmd, capture_output=True, text=True, env=env, input=stdin_input)
-    if result.returncode != 0:
-        error_msg = result.stderr or result.stdout or "Unknown error"
-        logger.error(f"{LLM_BACKEND} error: {error_msg}")
-        raise RuntimeError(f"{LLM_BACKEND} execution failed: {error_msg}")
-    return result.stdout.strip()
+    max_retries = 3
+    for attempt in range(1, max_retries + 1):
+        logger.debug(f"Running {LLM_BACKEND} attempt {attempt}/{max_retries} ({'text-only' if text_only else 'agentic'}): {prompt[:200]}...")
+        env = os.environ.copy()
+        api_key = os.getenv("ANTHROPIC_API_KEY")
+        if api_key:
+            env["ANTHROPIC_API_KEY"] = api_key
+        result = subprocess.run(cmd, capture_output=True, text=True, env=env, input=prompt)
+        combined_output = (result.stderr or "") + (result.stdout or "")
+        if result.returncode != 0:
+            if result.stdout and result.stdout.strip():
+                logger.warning(f"{LLM_BACKEND} exited with code {result.returncode} but produced output — continuing")
+                return result.stdout.strip()
+            if "quota" in combined_output.lower() or "429" in combined_output or "rate" in combined_output.lower():
+                if attempt < max_retries:
+                    delay = _parse_retry_delay(combined_output)
+                    logger.warning(f"Rate limit hit (attempt {attempt}/{max_retries}). Waiting {delay}s before retry...")
+                    time.sleep(delay)
+                    continue
+                else:
+                    logger.error(f"Rate limit still exceeded after {max_retries} attempts")
+            error_msg = result.stderr or result.stdout or "Unknown error"
+            logger.error(f"{LLM_BACKEND} error: {error_msg}")
+            raise RuntimeError(f"{LLM_BACKEND} execution failed: {error_msg}")
+        return result.stdout.strip()
+    raise RuntimeError(f"{LLM_BACKEND} failed after {max_retries} retries")
 
 
 def git_commit(message: str) -> None:
