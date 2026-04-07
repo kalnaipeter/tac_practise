@@ -6,11 +6,21 @@ Pipeline: Classify → Branch → Plan → Build → Test (loop) → Review (wit
 
 ## Instructions
 
-You are executing a sequential multi-phase development pipeline. Complete ALL phases below in order. Do NOT skip phases. If a phase fails, fix the issue and restart from that phase.
+You are executing a sequential multi-phase development pipeline.
+
+CRITICAL: Follow these steps exactly. Do NOT skip phases. Do NOT combine phases. Do NOT take shortcuts.
 
 Read `CLAUDE.md` first for project context.
 
-IMPORTANT: Track your progress. At the start of each phase, state which phase you are entering.
+CRITICAL: At the start of EVERY phase, print this marker before doing any work:
+```
+=== PHASE N: <Phase Name> ===
+```
+At the end of EVERY phase, print:
+```
+=== PHASE N COMPLETE ===
+```
+This is mandatory — it proves you executed every phase. Under no circumstances omit these markers.
 
 ### Phase 1 — Classify
 
@@ -21,6 +31,8 @@ Determine the task type from the description:
 
 ### Phase 2 — Branch
 
+CRITICAL: Do NOT skip branch creation. Every task gets its own branch.
+
 Create a dedicated branch for this work:
 
 ```bash
@@ -30,6 +42,11 @@ git checkout -b <type>/<short-slug>
 ```
 
 Use the classification from Phase 1 as the branch prefix (e.g., `feature/dark-mode-toggle`, `bug/search-clear`, `chore/lint-config`).
+
+Verify you are on the new branch before proceeding:
+```bash
+git branch --show-current
+```
 
 ### Phase 3 — Plan
 
@@ -102,13 +119,15 @@ CRITICAL: This is a thorough structured review, not a quick glance. Be precise a
 - Check: TypeScript `any` types? Unused imports/variables? Pattern violations? Missing error handling?
 - If code issues found → fix, commit with `git commit -m "fix: resolve review issue"`, return to Phase 5
 
-**6b. Visual Review (if the feature has UI changes):**
+**6b. Visual Review:**
+CRITICAL: If the task is a feature or bug with UI changes, you MUST take screenshots. Do NOT skip this step. Never assume "it probably looks fine" — verify visually.
+
 - Ensure the dev server is running (`npm run dev`)
 - Navigate to http://localhost:5173
-- IMPORTANT: Take screenshots of the critical functionality paths (aim for 1-5 screenshots)
+- CRITICAL: Take screenshots of the critical functionality paths (aim for 1-5 screenshots)
   - Name them: `01_<descriptive-name>.png`, `02_<descriptive-name>.png`, etc.
   - Store in `agents/flow/review_img/` (create the directory if needed)
-  - IMPORTANT: Read back each screenshot to verify it matches the spec — do not assume it's correct
+  - CRITICAL: Read back each screenshot to verify it matches the spec — do not assume it's correct. If a screenshot is blank or wrong, retake it.
 - Focus only on critical paths that prove the feature works as specified
 - If a visual issue is found, classify its severity:
   - `blocker` — prevents release, harms user experience → create a patch spec in `specs/patch/patch-flow-<name>.md` following `.github/prompts/patch.prompt.md`, fix it, return to Phase 5
@@ -136,13 +155,28 @@ Follow the documentation process from `.github/prompts/document.prompt.md`:
 
 ### Phase 8 — Final Commit & Push
 
+CRITICAL: Verify you are NOT on `main` before pushing. You should be on the branch created in Phase 2.
+
 ```bash
+git branch --show-current
 git push origin HEAD
 ```
+
+If `git branch --show-current` returns `main`, STOP — you skipped Phase 2. Go back and create the branch.
 
 After push, report the branch name so the user can create a PR.
 
 ### Phase 9 — Report
+
+Before reporting, verify you completed every phase. Double-check:
+- [ ] Phase 2: Are you on a feature/bug/chore branch (not main)?
+- [ ] Phase 3: Was a spec file created in `specs/`?
+- [ ] Phase 5: Did lint and build pass?
+- [ ] Phase 6b: Were screenshots taken (for UI features)?
+- [ ] Phase 7: Was documentation created in `app_docs/`?
+- [ ] Phase 8: Was the branch pushed?
+
+If any checkbox fails, go back and complete that phase before reporting.
 
 Provide a structured summary:
 
