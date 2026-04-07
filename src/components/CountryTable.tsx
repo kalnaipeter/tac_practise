@@ -3,14 +3,16 @@ import type { Country } from "../types/Country";
 import { getCountries } from "../services/countryService";
 import Actions from "./Actions";
 import Paginator from "./Paginator";
+import EditCountryDialog from "./EditCountryDialog";
 import "./CountryTable.css";
 
 const ROWS_OPTIONS = [5, 10, 25];
 
 export default function CountryTable() {
-  const [countries] = useState<Country[]>(getCountries);
+  const [countries, setCountries] = useState<Country[]>(getCountries);
   const [rowsPerPage, setRowsPerPage] = useState<number>(5);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [editingCountry, setEditingCountry] = useState<Country | null>(null);
 
   const totalPages = Math.max(1, Math.ceil(countries.length / rowsPerPage));
   const paginatedCountries = countries.slice(
@@ -21,7 +23,17 @@ export default function CountryTable() {
   const formatNumber = (n: number) => n.toLocaleString();
 
   const handleShow = (name: string) => alert(`Show: ${name}`);
-  const handleEdit = (name: string) => alert(`Edit: ${name}`);
+  const handleEdit = (name: string) => {
+    const found = countries.find((c) => c.name === name) ?? null;
+    setEditingCountry(found);
+  };
+  const handleSave = (updated: Country) => {
+    setCountries((prev) =>
+      prev.map((c) => (c.name === editingCountry?.name ? updated : c))
+    );
+    setEditingCountry(null);
+  };
+  const handleCancelEdit = () => setEditingCountry(null);
   const handleDelete = (name: string) => alert(`Delete: ${name}`);
 
   return (
@@ -73,6 +85,13 @@ export default function CountryTable() {
           setCurrentPage(1);
         }}
       />
+      {editingCountry && (
+        <EditCountryDialog
+          country={editingCountry}
+          onSave={handleSave}
+          onCancel={handleCancelEdit}
+        />
+      )}
     </div>
   );
 }
