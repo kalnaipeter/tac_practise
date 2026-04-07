@@ -50,3 +50,9 @@ This prompt helps you determine what documentation you should read based on the 
   - Conditions:
     - When creating a patch plan for a specific issue
     - When fixing a review issue
+
+- app_docs/feature-flow-show-country-dialog.md
+  - Conditions:
+    - When working with the Show Country dialog
+    - When modifying country detail display or flag images
+    - When adding new fields to the Country data model
