@@ -1,6 +1,6 @@
 # Copilot-Only Workflow Guide
 
-> Version: 1.0  
+> Version: 1.1  
 > Last updated: 2026-04-07  
 > How to use all TAC lesson infrastructure with only VS Code Copilot — no external LLM backends needed.
 
@@ -133,7 +133,14 @@ For running a complete pipeline in one go, use the **flow prompt**:
 /flow chore Migrate to CSS modules
 ```
 
-This runs the full sequence (plan → build → test → fix → review) automatically. See `.github/prompts/flow.prompt.md`.
+This runs the full sequence (plan → build → test → fix → review → document) automatically. See `.github/prompts/flow.prompt.md`.
+
+The `/flow` prompt includes:
+- **Spec verification** — compares implementation against every acceptance criterion
+- **Visual review with screenshots** — takes 1-5 screenshots of critical UI paths, stores in `agents/flow/review_img/`
+- **Issue severity classification** — blocker / tech_debt / skippable
+- **Documentation generation** — creates feature docs in `app_docs/` with screenshots
+- **Structured report** — files changed, validation results, review verdict, screenshots taken
 
 ## Comparison: ADW Automation vs Copilot Manual
 

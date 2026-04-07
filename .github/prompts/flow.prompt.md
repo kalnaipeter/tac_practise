@@ -1,6 +1,6 @@
 # Full Development Flow
 
-Run the complete development pipeline for a task in one shot: Plan → Build → Test → Fix → Review.
+Run the complete development pipeline for a task in one shot: Plan → Build → Test → Fix → Review → Document.
 
 ## Instructions
 
@@ -49,25 +49,70 @@ If either fails:
 - IMPORTANT: Rerun BOTH checks from step 1 (not just the one that failed)
 - Repeat until both pass
 
-### Phase 5 — Review
+### Phase 5 — Review Against Spec
 
-Review your own implementation:
-- Does the code match the spec (if one was created)?
-- Are there any TypeScript `any` types? Remove them.
-- Are there unused imports or variables? Remove them.
-- Does the code follow existing patterns in the codebase?
-- Are CSS files co-located with their components?
+IMPORTANT: This is not a quick glance. This is a structured review of the implementation against the spec.
 
-If issues found, fix them and go back to Phase 4.
+**5a. Code Review:**
+- Run `git diff origin/main` to see all changes
+- Compare every acceptance criterion in the spec against the actual implementation
+- Check: TypeScript `any` types? Unused imports/variables? Pattern violations?
+- If code issues found, fix them and go back to Phase 4
 
-### Phase 6 — Report
+**5b. Visual Review (if the feature has UI changes):**
+- Ensure the dev server is running (`npm run dev`)
+- Navigate to http://localhost:5173
+- IMPORTANT: Take screenshots of the critical functionality paths (1-5 screenshots)
+  - Name them: `01_<descriptive-name>.png`, `02_<descriptive-name>.png`, etc.
+  - Store in `agents/flow/review_img/` (create if needed)
+  - IMPORTANT: Read back each screenshot to verify it matches the spec — do not assume
+- Focus only on critical paths that prove the feature works as specified
+- If any visual issue is found, describe it with severity:
+  - `blocker` — prevents release, harms user experience
+  - `tech_debt` — works but creates future problems
+  - `skippable` — cosmetic, non-blocking
 
-Summarize what was done:
-1. Task type (feature/bug/chore)
-2. Files created or modified
-3. Spec file location (if created)
-4. Validation results (lint + build)
-5. Any decisions or trade-offs made
+**5c. Spec Verdict:**
+- Does the implementation satisfy ALL acceptance criteria in the spec?
+- If NO → fix the gap and return to Phase 3
+- If YES → proceed
+
+### Phase 6 — Document
+
+Follow the documentation process from `.github/prompts/document.prompt.md`:
+- Analyze git diff to understand what changed
+- Create documentation in `app_docs/` directory
+- If screenshots were taken in Phase 5, copy them to `app_docs/assets/` and reference them
+- Update `conditional-docs` with an entry for the new doc
+
+### Phase 7 — Report
+
+Provide a structured summary:
+
+```
+## Flow Report
+
+**Task type:** feature | bug | chore
+**Spec:** specs/<name>.md (if created)
+
+### Files Changed
+- list of files created or modified
+
+### Validation
+- Lint: pass/fail
+- Build: pass/fail
+
+### Review
+- Spec match: yes/no
+- Screenshots: list paths (or "N/A — no UI changes")
+- Issues found: list or "none"
+
+### Documentation
+- Doc file: app_docs/<name>.md (or "skipped")
+
+### Decisions & Trade-offs
+- any notable choices made during implementation
+```
 
 ## Relevant Files
 
@@ -76,4 +121,6 @@ Summarize what was done:
 - `src/components/` — React components
 - `src/services/` — Data layer
 - `src/types/` — TypeScript interfaces
-- `.github/prompts/` — Individual phase prompts for reference
+- `.github/prompts/review.prompt.md` — Full review protocol reference
+- `.github/prompts/document.prompt.md` — Full documentation protocol reference
+- `.github/prompts/conditional-docs.prompt.md` — Conditional doc routing
