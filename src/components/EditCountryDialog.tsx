@@ -29,6 +29,7 @@ export default function EditCountryDialog({ country, onSave, onCancel }: Props) 
       ...draft,
       population: Number(draft.population),
       area: Number(draft.area),
+      countryCode: country.countryCode,
     });
   };
 

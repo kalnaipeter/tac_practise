@@ -6,4 +6,5 @@ export interface Country {
   continent: string;
   language: string;
   currency: string;
+  countryCode: string;
 }

@@ -1,0 +1,75 @@
+dialog.show-dialog {
+  margin: auto;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 24px;
+  min-width: 400px;
+  max-width: 560px;
+  width: 100%;
+}
+
+dialog.show-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.show-dialog-title {
+  margin: 0 0 20px;
+  font-size: 20px;
+  color: var(--text-h);
+}
+
+.show-dialog-details {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px 16px;
+  margin: 0;
+}
+
+.show-dialog-details dt {
+  text-align: right;
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.show-dialog-details dd {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-h);
+}
+
+.show-dialog-flag {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.show-dialog-flag-img {
+  max-width: 240px;
+  width: 100%;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+.show-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.show-btn-close {
+  padding: 6px 16px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  font: inherit;
+  cursor: pointer;
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+.show-btn-close:hover {
+  background: var(--code-bg);
+}

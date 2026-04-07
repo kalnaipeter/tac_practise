@@ -9,6 +9,7 @@ const countries: Country[] = [
     continent: "Europe",
     language: "Hungarian",
     currency: "HUF",
+    countryCode: "hu",
   },
   {
     name: "Germany",
@@ -18,6 +19,7 @@ const countries: Country[] = [
     continent: "Europe",
     language: "German",
     currency: "EUR",
+    countryCode: "de",
   },
   {
     name: "Japan",
@@ -27,6 +29,7 @@ const countries: Country[] = [
     continent: "Asia",
     language: "Japanese",
     currency: "JPY",
+    countryCode: "jp",
   },
   {
     name: "Brazil",
@@ -36,6 +39,7 @@ const countries: Country[] = [
     continent: "South America",
     language: "Portuguese",
     currency: "BRL",
+    countryCode: "br",
   },
   {
     name: "Australia",
@@ -45,6 +49,7 @@ const countries: Country[] = [
     continent: "Oceania",
     language: "English",
     currency: "AUD",
+    countryCode: "au",
   },
   {
     name: "Canada",
@@ -54,6 +59,7 @@ const countries: Country[] = [
     continent: "North America",
     language: "English/French",
     currency: "CAD",
+    countryCode: "ca",
   },
   {
     name: "Egypt",
@@ -63,6 +69,7 @@ const countries: Country[] = [
     continent: "Africa",
     language: "Arabic",
     currency: "EGP",
+    countryCode: "eg",
   },
   {
     name: "South Korea",
@@ -72,6 +79,7 @@ const countries: Country[] = [
     continent: "Asia",
     language: "Korean",
     currency: "KRW",
+    countryCode: "kr",
   },
 ];
 
