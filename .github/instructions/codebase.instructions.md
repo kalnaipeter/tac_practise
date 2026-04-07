@@ -20,5 +20,10 @@ Read `CLAUDE.md` in the project root for full context on the tech stack, archite
 
 1. Check `specs/` for an existing spec before implementing a feature
 2. Check `ai_docs/` for reference docs on any 3rd party library
-3. Run `npm run build` to verify no TypeScript errors after changes
-4. Run `npm run lint` to verify no lint errors after changes
+3. Check `ai_docs/copilot-workflow.md` for the full Copilot-only workflow guide
+4. Run `npm run build` to verify no TypeScript errors after changes
+5. Run `npm run lint` to verify no lint errors after changes
+
+## Maintenance
+
+When adding new prompts in `.github/prompts/` or changing workflows, update `ai_docs/copilot-workflow.md` to keep the Copilot workflow guide current.

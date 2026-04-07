@@ -112,6 +112,14 @@ For quick-fixing a specific issue, read `.github/prompts/patch.prompt.md` for th
 For generating feature documentation, read `.github/prompts/document.prompt.md` for the documentation format.
 For context routing, read `.github/prompts/conditional-docs.prompt.md` to know which docs to read for your current task.
 
+## Copilot-Only Workflow
+
+For using all prompts and workflows without external LLM backends, see `ai_docs/copilot-workflow.md`.
+
+Key prompt: `/flow <description>` runs the full pipeline (Plan → Build → Test → Fix → Review) in one shot.
+
+IMPORTANT: When adding new prompts or changing workflows, update `ai_docs/copilot-workflow.md` to keep it current.
+
 ## Conventions
 
 - Functional components only (no class components)

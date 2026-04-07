@@ -8,6 +8,11 @@ Place 3rd party documentation, API references, and quickstart guides here so age
 - API reference snippets for external services
 - Framework documentation excerpts relevant to the codebase
 - Any reference material an agent would need to avoid hallucinating API usage
+- **Workflow guides** — like `copilot-workflow.md` for using the project with Copilot only
+
+## Key Files
+
+- **`copilot-workflow.md`** — How to use all TAC prompts and workflows with only VS Code Copilot (no external LLMs). IMPORTANT: Keep this updated when prompts or workflows change.
 
 ## Why
 
