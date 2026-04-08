@@ -146,7 +146,8 @@ Follow the documentation process from `.github/prompts/document.prompt.md`:
 - If no meaningful changes exist, skip this phase
 - Create documentation in `app_docs/` directory (filename: `feature-flow-<descriptive-name>.md`)
 - If screenshots were taken in Phase 6, copy them to `app_docs/assets/` and reference them in the doc
-- Update `.github/prompts/conditional-docs.prompt.md` with an entry for the new doc file
+- CRITICAL: Update `.github/prompts/conditional-docs.prompt.md` with an entry for the new doc file — this is how future agents discover relevant documentation. Do NOT skip this step.
+- If the task introduced new conventions, patterns, or libraries, update the **Conventions** section in `CLAUDE.md` so all future agents inherit the knowledge.
 - Commit:
   ```bash
   git add -A
@@ -174,6 +175,7 @@ Before reporting, verify you completed every phase. Double-check:
 - [ ] Phase 5: Did lint and build pass?
 - [ ] Phase 6b: Were screenshots taken (for UI features)?
 - [ ] Phase 7: Was documentation created in `app_docs/`?
+- [ ] Phase 7: Was `conditional-docs.prompt.md` updated with a new entry?
 - [ ] Phase 8: Was the branch pushed?
 
 If any checkbox fails, go back and complete that phase before reporting.

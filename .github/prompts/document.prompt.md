@@ -47,8 +47,13 @@ documentation_screenshots_dir: $3 if provided, otherwise leave it blank
 - The entry should help future agents know when to read this documentation
 - Format the entry following the existing pattern in the file
 
-### 6. Final Output
-- When you finish writing the documentation and updating conditional-docs.prompt.md, return exclusively the path to the documentation file created and nothing else
+### 6. Update Project Conventions
+- If the feature introduced new conventions, patterns, libraries, or UI approaches (e.g., a new component library, icon set, styling strategy, or architectural pattern), update the **Conventions** section in `CLAUDE.md`
+- Only add entries for genuinely new project-wide patterns — not every implementation detail
+- This ensures all future agents know about adopted patterns without needing to discover them from code exploration
+
+### 7. Final Output
+- When you finish writing the documentation, updating conditional-docs.prompt.md, and (if needed) CLAUDE.md, return exclusively the path to the documentation file created and nothing else
 
 ## Documentation Format
 
