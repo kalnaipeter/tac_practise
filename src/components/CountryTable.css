@@ -12,6 +12,7 @@
 .country-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
   font-size: 0.9rem;
 }
 
@@ -20,6 +21,9 @@
   padding: 0.6rem 0.8rem;
   text-align: left;
   border-bottom: 1px solid var(--border, #e5e4e7);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .country-table th {
@@ -29,6 +33,15 @@
   position: sticky;
   top: 0;
 }
+
+.country-table th:nth-child(1) { width: 14%; }
+.country-table th:nth-child(2) { width: 13%; }
+.country-table th:nth-child(3) { width: 12%; }
+.country-table th:nth-child(4) { width: 12%; }
+.country-table th:nth-child(5) { width: 12%; }
+.country-table th:nth-child(6) { width: 12%; }
+.country-table th:nth-child(7) { width: 10%; }
+.country-table th:nth-child(8) { width: 15%; }
 
 .country-table tbody tr:hover {
   background: var(--accent-bg, rgba(170, 59, 255, 0.1));
