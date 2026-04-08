@@ -1,6 +1,6 @@
 .country-table-wrapper {
   padding: 2rem;
-  max-width: 1000px;
+  max-width: 1100px;
   margin: 0 auto;
 }
 
@@ -34,14 +34,14 @@
   top: 0;
 }
 
-.country-table th:nth-child(1) { width: 14%; }
-.country-table th:nth-child(2) { width: 13%; }
-.country-table th:nth-child(3) { width: 12%; }
-.country-table th:nth-child(4) { width: 12%; }
-.country-table th:nth-child(5) { width: 12%; }
-.country-table th:nth-child(6) { width: 12%; }
+.country-table th:nth-child(1) { width: 13%; }
+.country-table th:nth-child(2) { width: 12%; }
+.country-table th:nth-child(3) { width: 11%; }
+.country-table th:nth-child(4) { width: 11%; }
+.country-table th:nth-child(5) { width: 14%; }
+.country-table th:nth-child(6) { width: 11%; }
 .country-table th:nth-child(7) { width: 10%; }
-.country-table th:nth-child(8) { width: 15%; }
+.country-table th:nth-child(8) { width: 18%; }
 
 .country-table tbody tr:hover {
   background: var(--accent-bg, rgba(170, 59, 255, 0.1));
