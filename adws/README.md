@@ -2,16 +2,28 @@
 
 ADW automates software development by integrating GitHub issues with Claude Code CLI to classify issues, generate plans, implement solutions, and create pull requests — all without you in the loop.
 
-## The PETER Framework
+## The PETER Framework (and its ZTE evolution)
 
 Every out-of-loop agentic system is built on four pillars:
 
 | Pillar | What It Does | tac_practise Implementation |
 |--------|-------------|---------------------------|
 | **P — Prompt Input** | How work enters the system | GitHub Issues (`/chore`, `/bug`, `/feature`) |
-| **E — Environment** | Safe execution space | Feature branch per issue, isolated from `main` |
+| **E — Environment** | Safe execution space | Feature branch per issue; **isolated worktrees** for parallel agents |
 | **T — Trigger** | What kicks off the agent | Webhook (`trigger_webhook.py`) or Cron (`trigger_cron.py`) |
 | **R — Review** | How output is validated | Pull Request → human review → merge |
+
+### Zero-Touch Engineering (ZTE)
+
+ZTE is the evolution from PITER (2 touchpoints: prompt + review) to PITE (1 touchpoint: prompt only).
+
+| Level | Framework | Touchpoints | Scripts |
+|-------|-----------|-------------|---------|
+| Out-Loop | PITER | Prompt + Review | `adw_sdlc.py`, `adw_sdlc_iso.py` |
+| Zero-Touch | PITE | Prompt only | `adw_sdlc_zte_iso.py` (auto-merges) |
+
+Issue format for ZTE: `/chore adw_sdlc_ZTE_iso update the background color`
+CRITICAL: `ZTE` must be EXPLICITLY uppercased.
 
 ## How It Works
 
@@ -60,12 +72,37 @@ cd adws/
 # Process a single issue manually
 uv run adw_plan_build.py 123
 
+# Isolated SDLC (parallel-safe, worktree per agent)
+uv run adw_sdlc_iso.py 123
+
+# Zero-Touch Execution (auto-merges to main!)
+uv run adw_sdlc_zte_iso.py 123
+
+# Ship phase only (merge to main)
+uv run adw_ship_iso.py 123 <adw-id>
+
 # Run continuous monitoring (polls every 20 seconds)
 uv run trigger_cron.py
 
 # Start webhook server (for instant GitHub events)
 uv run trigger_webhook.py
 ```
+
+## Isolated Workflows (Zero-Touch Engineering)
+
+All `_iso` scripts run in isolated git worktrees under `trees/<adw_id>/`:
+- Each agent gets its own filesystem copy of the repo
+- Dedicated port ranges (backend: 9100-9114, frontend: 9200-9214)
+- Supports 15 concurrent agents
+- State persists in `agents/<adw_id>/adw_state.json`
+
+### Pipeline Overview
+
+| Script | Phases | Ships To Main? |
+|--------|--------|----------------|
+| `adw_sdlc_iso.py` | Plan → Build → Test → Review → Document | No (creates PR) |
+| `adw_sdlc_zte_iso.py` | Plan → Build → Test → Review → Document → Ship | Yes (auto-merge) |
+| `adw_ship_iso.py` | Validate state → Merge to main | Yes |
 
 ## Trigger Modes
 

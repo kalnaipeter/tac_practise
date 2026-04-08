@@ -1,6 +1,6 @@
 # Copilot-Only Workflow Guide
 
-> Version: 2.0  
+> Version: 3.0  
 > Last updated: 2026-04-07  
 > How to use all TAC lesson infrastructure with only VS Code Copilot — no external LLM backends needed.
 
@@ -59,6 +59,16 @@ All prompts live in `.github/prompts/`. Each has a single purpose.
 | Prompt | Command | Purpose |
 |---|---|---|
 | **chore** | `/chore <description>` | Refactoring, cleanup, config changes |
+
+### Zero-Touch Engineering (Lesson 7)
+
+| Prompt | Command | Purpose |
+|---|---|---|
+| **classify-adw** | `/classify-adw <text>` | Extract ADW workflow + model_set from issue text |
+| **in-loop-review** | `/in-loop-review <branch>` | Checkout agent's branch, start app for manual review |
+| **install-worktree** | `/install-worktree <path> <be-port> <fe-port>` | Set up isolated worktree with custom ports |
+| **cleanup-worktrees** | `/cleanup-worktrees [list\|all\|<id>]` | Manage/remove isolated worktrees |
+| **ship** | `/ship` | Merge current branch to main (ZTE final gate) |
 
 ### Full Pipeline
 
@@ -129,6 +139,34 @@ Step 6:  /document                  → Document
 Step 7:  git commit + PR            → Ship
 ```
 
+### Zero-Touch Execution (mirrors `adw_sdlc_zte_iso.py`)
+
+Same as Full SDLC but auto-merges to main after all phases pass:
+
+```
+Step 1:  /flow <description>        → Runs phases 1-7 automatically
+Step 2:  /ship                      → Merge to main (ZTE gate)
+```
+
+Or for parallel work with isolation:
+
+```
+Step 1:  /install-worktree trees/abc12345 9101 9201  → Set up isolated env
+Step 2:  (work in worktree)
+Step 3:  /ship                                        → Merge when done
+Step 4:  /cleanup-worktrees abc12345                  → Clean up
+```
+
+### Reviewing Agent Work
+
+When an agent has completed work on a branch and you want to inspect it:
+
+```
+Step 1:  /in-loop-review feature/my-branch  → Checkout + start app
+Step 2:  (manually inspect in browser)
+Step 3:  git checkout main                  → Return to main
+```
+
 ## Sequential Flow Prompt — `/flow`
 
 For running a complete pipeline in one go, use the **flow prompt**:
@@ -177,6 +215,11 @@ This runs the **full SDLC sequence** in a single Copilot session — equivalent 
 | Git commits per phase | Yes — plan, build, fixes, docs each committed |
 | Git push | Yes — Phase 8 |
 | Structured report | Yes — Phase 9 |
+| Worktree isolation (`adw_sdlc_iso`) | Via `/install-worktree` — manual setup for parallel work |
+| ADW classification (`classify_adw`) | Via `/classify-adw` — extract workflow + model_set from text |
+| In-loop review | Via `/in-loop-review <branch>` — checkout + start app for manual inspection |
+| Worktree cleanup | Via `/cleanup-worktrees` — manage isolated environments |
+| Ship / auto-merge (ZTE) | Via `/ship` — merge to main after all phases pass |
 
 ### What `/flow` Does NOT Cover (by design)
 
@@ -193,6 +236,8 @@ These are ADW-only capabilities that require external infrastructure:
 | Multi-agent subprocess isolation | Single agent — shared context (usually better for coherence) |
 | Model selection per phase (opus for review) | Copilot chooses the model |
 | Rate limit retry logic | Handled by Copilot runtime |
+| Automatic worktree creation + port allocation | ADW scripts handle this; Copilot uses `/install-worktree` manually |
+| Zero-Touch auto-merge (`adw_sdlc_zte_iso`) | Use `/ship` manually after `/flow`; ZTE auto-merge is ADW-only |
 
 ## Comparison: ADW Automation vs `/flow` (Copilot)
 

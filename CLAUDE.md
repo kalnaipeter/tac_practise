@@ -63,6 +63,22 @@ The `adws/` directory contains an out-of-loop agentic system (PETER Framework) t
 | `adw_plan_build_test_review.py` | Plan → Build → Test → Review | Full validation + spec review |
 | `adw_sdlc.py` | Plan → Build → Test → Review → Document | Complete SDLC for production features |
 
+### Isolated Pipelines (Zero-Touch Engineering)
+
+| Pipeline | Phases | Use When |
+|----------|--------|----------|
+| `adw_sdlc_iso.py` | Plan → Build → Test → Review → Document (isolated) | Full SDLC with worktree isolation for parallel execution |
+| `adw_sdlc_zte_iso.py` | Plan → Build → Test → Review → Document → Ship (isolated) | Zero-Touch: auto-merge if all phases pass |
+| `adw_ship_iso.py` | Validate state → Merge to main | Final gate: ship after all phases succeed |
+
+Issue-driven usage (via GitHub Issues):
+- `/feature adw_sdlc_iso` — full SDLC for features (human reviews PR)
+- `/bug adw_sdlc_iso` — full SDLC for bugs (human reviews PR)
+- `/chore adw_sdlc_ZTE_iso` — zero-touch chore, auto-merges to main
+- Append `model_set heavy` to use more capable models for complex tasks
+
+CRITICAL: `ZTE` must be EXPLICITLY uppercased. Lowercase `zte` runs `adw_sdlc_iso` (non-ZTE) instead.
+
 ### Standalone Phases
 
 | Phase | Script | Purpose |
@@ -71,6 +87,7 @@ The `adws/` directory contains an out-of-loop agentic system (PETER Framework) t
 | Review | `adw_review.py` | Review implementation against spec, capture screenshots |
 | Patch | `adw_patch.py` | Quick-fix specific issue from 'adw_patch' keyword |
 | Document | `adw_document.py` | Generate feature docs + update conditional_docs |
+| Ship | `adw_ship_iso.py` | Validate all phases passed, merge to main |
 
 ```bash
 cd adws/
@@ -80,6 +97,11 @@ uv run adw_plan_build_test.py 123     # Plan + Build + Test feedback loop
 uv run adw_plan_build_review.py 123   # Plan + Build + Review against spec
 uv run adw_plan_build_test_review.py 123  # Plan + Build + Test + Review
 uv run adw_sdlc.py 123               # Full SDLC: Plan + Build + Test + Review + Document
+
+# Isolated Pipelines (Zero-Touch Engineering)
+uv run adw_sdlc_iso.py 123           # Isolated SDLC (parallel-safe)
+uv run adw_sdlc_zte_iso.py 123       # Zero-Touch: full SDLC + auto-merge
+uv run adw_ship_iso.py 123 abc12345  # Ship: validate state then merge to main
 
 # Standalone phases (require prior ADW state)
 uv run adw_test.py 123                # Run validation only on current branch
@@ -111,6 +133,11 @@ For reviewing implementation against a spec, read `.github/prompts/review.prompt
 For quick-fixing a specific issue, read `.github/prompts/patch.prompt.md` for the patch plan format.
 For generating feature documentation, read `.github/prompts/document.prompt.md` for the documentation format.
 For context routing, read `.github/prompts/conditional-docs.prompt.md` to know which docs to read for your current task.
+For classifying ADW workflows from issue text, read `.github/prompts/classify-adw.prompt.md`.
+For reviewing agent work on a branch, read `.github/prompts/in-loop-review.prompt.md`.
+For setting up isolated worktrees, read `.github/prompts/install-worktree.prompt.md`.
+For cleaning up worktrees, read `.github/prompts/cleanup-worktrees.prompt.md`.
+For shipping (merging to main), read `.github/prompts/ship.prompt.md`.
 
 ## Copilot-Only Workflow
 

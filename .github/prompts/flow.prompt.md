@@ -227,3 +227,4 @@ Provide a structured summary:
 - `.github/prompts/patch.prompt.md` — Patch plan format for blocker fixes
 - `.github/prompts/document.prompt.md` — Documentation generation protocol
 - `.github/prompts/conditional-docs.prompt.md` — Conditional doc routing
+- `.github/prompts/ship.prompt.md` — Ship (merge to main) protocol for ZTE
