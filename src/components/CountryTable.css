@@ -47,6 +47,10 @@
   background: var(--accent-bg, rgba(170, 59, 255, 0.1));
 }
 
+.country-table td:last-child {
+  overflow: visible;
+}
+
 .country-table .num {
   text-align: right;
   font-variant-numeric: tabular-nums;
