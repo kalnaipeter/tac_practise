@@ -1,7 +1,7 @@
 # Copilot-Only Workflow Guide
 
-> Version: 3.0  
-> Last updated: 2026-04-07  
+> Version: 4.0  
+> Last updated: 2026-04-09  
 > How to use all TAC lesson infrastructure with only VS Code Copilot — no external LLM backends needed.
 
 ## Overview
@@ -59,6 +59,13 @@ All prompts live in `.github/prompts/`. Each has a single purpose.
 | Prompt | Command | Purpose |
 |---|---|---|
 | **chore** | `/chore <description>` | Refactoring, cleanup, config changes |
+
+### Agentic Layer (Lesson 8)
+
+| Prompt | Command | Purpose |
+|---|---|---|
+| **agentic-audit** | `/agentic-audit` | Audit agentic vs application layer work ratio + recommend improvements |
+| **plan-agentic** | `/plan-agentic <description>` | Plan an agentic layer improvement (prompts, ADWs, specs, context) |
 
 ### Zero-Touch Engineering (Lesson 7)
 
@@ -220,6 +227,8 @@ This runs the **full SDLC sequence** in a single Copilot session — equivalent 
 | In-loop review | Via `/in-loop-review <branch>` — checkout + start app for manual inspection |
 | Worktree cleanup | Via `/cleanup-worktrees` — manage isolated environments |
 | Ship / auto-merge (ZTE) | Via `/ship` — merge to main after all phases pass |
+| Agentic layer audit | Via `/agentic-audit` — check 50/50 ratio, recommend improvements |
+| Agentic improvement planning | Via `/plan-agentic` — plan prompt/ADW/spec improvements |
 
 ### What `/flow` Does NOT Cover (by design)
 

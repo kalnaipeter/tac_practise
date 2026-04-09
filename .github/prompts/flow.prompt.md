@@ -210,6 +210,10 @@ Provide a structured summary:
 
 ### Decisions & Trade-offs
 - any notable choices made during implementation
+
+### Agentic Layer Check
+- Was this task on the agentic layer or application layer?
+- Suggested agentic improvement (if any): <one-liner or "none">
 ```
 
 ## Relevant Files

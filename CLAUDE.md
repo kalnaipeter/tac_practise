@@ -138,6 +138,20 @@ For reviewing agent work on a branch, read `.github/prompts/in-loop-review.promp
 For setting up isolated worktrees, read `.github/prompts/install-worktree.prompt.md`.
 For cleaning up worktrees, read `.github/prompts/cleanup-worktrees.prompt.md`.
 For shipping (merging to main), read `.github/prompts/ship.prompt.md`.
+For auditing agentic vs application layer work, read `.github/prompts/agentic-audit.prompt.md`.
+For planning agentic layer improvements, read `.github/prompts/plan-agentic.prompt.md`.
+
+## Agentic Layer — Prioritize Agentics
+
+IMPORTANT: Spend at least 50% of engineering time on the agentic layer, not the application layer.
+
+The agentic layer is everything outside `src/` that makes agents more capable: prompts, plans, ADWs, context files, templates, docs. See `ai_docs/agentic-layer-guide.md` for the full architecture and the 12 leverage points.
+
+**Daily question:** Am I working on the agentic layer or the application layer?
+
+### Multi-Agent Task Tracking
+
+For parallel agent work, use `tasks.md` in the project root. Tasks are grouped by git worktree with status symbols (`[]` pending, `[✅]` done, `[❌]` failed). See the file for the full format.
 
 ## Copilot-Only Workflow
 
