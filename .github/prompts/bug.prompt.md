@@ -21,6 +21,7 @@ Create a new plan in specs/*.md to resolve the `Bug` using the exact specified m
 
 Focus on the following files:
 - `CLAUDE.md` - Contains the project overview, architecture, and conventions.
+- `.github/prompts/conditional-docs.prompt.md` - Read this to find existing documentation relevant to the bug area. If any conditions match, read those docs before planning.
 - `src/components/**` - Contains all React components.
 - `src/services/**` - Contains data and service layer.
 - `src/types/**` - Contains TypeScript interfaces.

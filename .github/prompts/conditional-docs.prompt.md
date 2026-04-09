@@ -56,3 +56,9 @@ This prompt helps you determine what documentation you should read based on the 
     - When working with the Show Country dialog
     - When modifying country detail display or flag images
     - When adding new fields to the Country data model
+
+- app_docs/bugfix-stable-table-column-widths.md
+  - Conditions:
+    - When modifying table column widths or layout
+    - When changing the CountryTable CSS or adding/removing columns
+    - When working on pagination or table data display
