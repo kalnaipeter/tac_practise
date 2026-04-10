@@ -18,6 +18,10 @@ npm run lint      # Run ESLint across the project
 npm run preview   # Preview the production build
 ```
 
+## MCP Servers
+
+Playwright MCP is configured in `.vscode/mcp.json` for browser automation (screenshots, navigation, interaction). Key tools: `browser_navigate`, `browser_screenshot`. Used by `review.prompt.md`, `test.prompt.md`, `screenshot.prompt.md`, and the Review phase of `flow.prompt.md`. See `ai_docs/mcp-servers-guide.md` for setup details.
+
 ## Architecture
 
 ```

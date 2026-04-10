@@ -2,7 +2,7 @@
 
 Run the complete development pipeline for a task in one shot — equivalent to the full ADW SDLC pipeline.
 
-Pipeline: Classify → Branch → Plan → Build → Test (loop) → Review (with screenshots) → Document → Commit → Report.
+Pipeline: Classify → Branch → Plan → Build → Test (loop) → Review (with screenshots via Playwright MCP) → Document → Commit → Report.
 
 ## Instructions
 

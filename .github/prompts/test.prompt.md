@@ -47,7 +47,7 @@ Proactively identify and fix issues before they ship. Run this suite to:
 - **Command:** `npx playwright test`
 - **test_name:** `e2e_tests`
 - **What it catches:** UI regressions, broken user flows, integration failures
-- **Note:** Skip if Playwright is not set up yet
+- **Note:** Skip if Playwright test runner is not set up yet. If Playwright MCP is available, it can also be used for visual validation — call `browser_navigate` to load the app and `browser_screenshot` to capture the current state.
 - **IMPORTANT:** If there are errors at all, resolve them before continuing
 
 ## Feedback Loop Protocol

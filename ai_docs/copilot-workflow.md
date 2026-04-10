@@ -44,7 +44,7 @@ All prompts live in `.github/prompts/`. Each has a single purpose.
 |---|---|---|
 | **test** | `/test` | Full validation: lint + build + unit tests + E2E |
 | **resolve-failed-test** | `/resolve-failed-test` | Fix failing validation errors (structured protocol) |
-| **review** | `/review` | Review against spec with screenshots + JSON report |
+| **review** | `/review` | Review against spec with screenshots (Playwright MCP) + JSON report |
 
 ### Documentation & Context
 
@@ -59,6 +59,8 @@ All prompts live in `.github/prompts/`. Each has a single purpose.
 | Prompt | Command | Purpose |
 |---|---|---|
 | **chore** | `/chore <description>` | Refactoring, cleanup, config changes |
+
+| **screenshot** | `/screenshot` | Take a screenshot of the running app via Playwright MCP |
 
 ### Agentic Layer (Lesson 8)
 
@@ -195,7 +197,7 @@ This runs the **full SDLC sequence** in a single Copilot session — equivalent 
 | 3. Plan | Plan Agent + `feature.prompt.md` | Creates spec in `specs/` with acceptance criteria + validation commands, commits |
 | 4. Build | Build Agent + `implement.prompt.md` | Implements the spec, commits |
 | 5. Validate | `adw_test.py` test-fix loop | Runs lint → build → unit tests → E2E. Max 4 attempts, commits each fix |
-| 6. Review | `adw_review.py` + `review.prompt.md` | Spec verification, screenshots (1-5), severity classification, patch specs for blockers |
+| 6. Review | `adw_review.py` + `review.prompt.md` | Spec verification, screenshots via Playwright MCP (1-5), severity classification, patch specs for blockers |
 | 7. Document | `adw_document.py` + `document.prompt.md` | Creates docs in `app_docs/`, copies screenshots, updates conditional-docs |
 | 8. Push | `create_pull_request()` | `git push origin HEAD` |
 | 9. Report | Status comment | Structured summary: files, validation, review, screenshots, docs |
@@ -213,7 +215,7 @@ This runs the **full SDLC sequence** in a single Copilot session — equivalent 
 | Test-fix-retest loop (max 4) | Yes — Phase 5, commits each fix attempt |
 | Resolve-failed-test protocol | Yes — Phase 5 references the prompt |
 | Review against spec | Yes — Phase 6a, every acceptance criterion |
-| Screenshots with read-back | Yes — Phase 6b, 1-5 screenshots in `agents/flow/review_img/` |
+| Screenshots with read-back | Yes — Phase 6b, 1-5 screenshots in `agents/flow/review_img/` via Playwright MCP (`browser_navigate` + `browser_screenshot`) |
 | Issue severity (blocker/tech_debt/skip) | Yes — Phase 6b |
 | Patch specs for blockers | Yes — Phase 6b, creates `specs/patch/` |
 | Documentation generation | Yes — Phase 7 |

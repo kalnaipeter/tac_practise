@@ -45,7 +45,9 @@ review_image_dir: `<absolute path to project>/agents/<adw_id>/<agent_name>/revie
 
 ## Setup
 
-Before reviewing, ensure the dev server is running:
+Before reviewing, ensure:
+- The dev server is running (`npm run dev`)
+- If Playwright MCP is available (`browser_navigate`, `browser_screenshot`), use it for screenshots — it provides actual browser rendering. Otherwise fall back to any available screenshot tool.
 
 ```bash
 npm run dev
