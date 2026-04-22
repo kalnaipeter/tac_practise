@@ -1,7 +1,7 @@
 # Copilot-Only Workflow Guide
 
-> Version: 4.0  
-> Last updated: 2026-04-09  
+> Version: 5.0  
+> Last updated: 2026-04-17  
 > How to use all TAC lesson infrastructure with only VS Code Copilot — no external LLM backends needed.
 
 ## Overview
@@ -53,6 +53,9 @@ All prompts live in `.github/prompts/`. Each has a single purpose.
 | **document** | `/document` | Generate feature docs in `app_docs/` with screenshots |
 | **conditional-docs** | `/conditional-docs` | Update docs only if code changed |
 | **prime** | `/prime` | Load full project context into Copilot |
+| **prime-bug** | `/prime-bug` | Load bug-fixing context (diagnosis, validation, resolution) |
+| **prime-feature** | `/prime-feature` | Load feature development context (plan, build, review, test) |
+| **prime-testing** | `/prime-testing` | Load testing context (test execution, failure resolution) |
 
 ### Maintenance
 
@@ -68,6 +71,12 @@ All prompts live in `.github/prompts/`. Each has a single purpose.
 |---|---|---|
 | **agentic-audit** | `/agentic-audit` | Audit agentic vs application layer work ratio + recommend improvements |
 | **plan-agentic** | `/plan-agentic <description>` | Plan an agentic layer improvement (prompts, ADWs, specs, context) |
+
+### Context Engineering (Lesson 10)
+
+| Prompt | Command | Purpose |
+|---|---|---|
+| **expert-improve** | `/expert-improve <expert-path>` | Review recent changes and update an expert's accumulated learnings |
 
 ### Zero-Touch Engineering (Lesson 7)
 
@@ -231,6 +240,10 @@ This runs the **full SDLC sequence** in a single Copilot session — equivalent 
 | Ship / auto-merge (ZTE) | Via `/ship` — merge to main after all phases pass |
 | Agentic layer audit | Via `/agentic-audit` — check 50/50 ratio, recommend improvements |
 | Agentic improvement planning | Via `/plan-agentic` — plan prompt/ADW/spec improvements |
+| Context-specific priming | Via `/prime-bug`, `/prime-feature`, `/prime-testing` — load task-focused context |
+| Expert self-improvement | Via `/expert-improve` — update expert learnings after completing work |
+| Context engineering reference | Via `ai_docs/context-engineering-guide.md` — R&D framework with all 12 techniques |
+| Output style control | Via `ai_docs/output-styles.md` — token efficiency guide |
 
 ### What `/flow` Does NOT Cover (by design)
 
@@ -280,11 +293,13 @@ These files help Copilot understand the project:
 
 ## Tips
 
-1. **Always `/prime` first** in a new chat session to load project context
+1. **Always prime first** — use `/prime` for general work, or `/prime-bug`, `/prime-feature`, `/prime-testing` for focused context
 2. **Review specs before implementing** — the plan is your checkpoint
 3. **Run `/test` after every change** — catch errors early
 4. **Use `/conditional-docs`** to keep docs in sync with code changes
 5. **Specs are reusable** — if a build goes wrong, delete the code and `/implement` the spec again
+6. **Run `/expert-improve` after shipping** — update expert prompts with what you learned
+7. **Keep context lean** — see `ai_docs/context-engineering-guide.md` for the R&D framework
 
 ## Maintaining This Document
 

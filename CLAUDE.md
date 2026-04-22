@@ -119,6 +119,38 @@ uv run trigger_webhook.py             # Real-time webhook server
 uv run trigger_cron.py                # Poll every 20s
 ```
 
+## Context Engineering — R&D Framework
+
+IMPORTANT: A focused agent is a performant agent. Manage context with **R**educe and **D**elegate.
+
+### Context Priming (Reduce)
+
+CLAUDE.md contains only universals. For task-specific context, use dynamic priming:
+- `/prime` — General codebase understanding
+- `/prime-bug` — Bug diagnosis workflow (loads bug, validation, test-resolution prompts)
+- `/prime-feature` — Feature development workflow (loads feature, implement, review, test prompts)
+- `/prime-testing` — Test/validation workflow (loads test, resolve, validation prompts)
+
+### Output Efficiency (Reduce)
+
+Output tokens get added back to context and cost 3-5x more than input. Keep responses concise:
+- When executing from a spec → confirm completion, don't explain the approach
+- When running commands → report pass/fail, don't narrate each step
+- See `ai_docs/output-styles.md` for the full guide
+
+### Delegation Patterns (Delegate)
+
+- **Architect/Editor:** `/quick-plan` (plan in one session) → `/build` (implement in fresh context)
+- **Sub-agents:** `/load-ai-docs` delegates scraping to parallel sub-agents
+- **Background agents:** `/background` fires off autonomous agents for parallel work
+- **Agent experts:** `experts/*.prompt.md` with `/expert-improve` for self-improvement loops
+
+### Context Hygiene
+
+- Never exceed 200k tokens — split the task instead
+- Prefer reset + prime over compact — compact leaves unknown state
+- See `ai_docs/context-engineering-guide.md` for the full R&D framework with all 12 techniques
+
 ## Feedback Loop — Validation Protocol
 
 CRITICAL: Every change must be validated. Follow the closed-loop cycle: **Request → Validate → Resolve**.
@@ -144,6 +176,9 @@ For cleaning up worktrees, read `.github/prompts/cleanup-worktrees.prompt.md`.
 For shipping (merging to main), read `.github/prompts/ship.prompt.md`.
 For auditing agentic vs application layer work, read `.github/prompts/agentic-audit.prompt.md`.
 For planning agentic layer improvements, read `.github/prompts/plan-agentic.prompt.md`.
+For updating expert knowledge after completing work, read `.github/prompts/expert-improve.prompt.md`.
+For context engineering techniques and anti-patterns, read `ai_docs/context-engineering-guide.md`.
+For output token control strategies, read `ai_docs/output-styles.md`.
 
 ## Agentic Layer — Prioritize Agentics
 
